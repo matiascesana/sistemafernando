@@ -1,0 +1,1741 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>CRM Clientes y Cobranzas</title>
+
+<link rel="stylesheet" href="styles.css">
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<link rel="manifest" href="manifest.json">
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Segoe UI',sans-serif;
+}
+
+body{
+background:#f4f6f9;
+color:#1f2937;
+overflow-x:hidden;
+}
+
+.app{
+display:flex;
+min-height:100vh;
+}
+
+/* SIDEBAR */
+
+.sidebar{
+width:260px;
+background:#111827;
+color:white;
+padding:25px;
+display:flex;
+flex-direction:column;
+gap:25px;
+position:fixed;
+height:100vh;
+left:0;
+top:0;
+}
+
+.logo{
+font-size:24px;
+font-weight:700;
+display:flex;
+align-items:center;
+gap:10px;
+margin-bottom:20px;
+}
+
+.logo i{
+color:#22c55e;
+}
+
+.sidebar nav{
+display:flex;
+flex-direction:column;
+gap:10px;
+}
+
+.menu-btn{
+background:transparent;
+border:none;
+color:#d1d5db;
+padding:14px;
+border-radius:12px;
+cursor:pointer;
+font-size:15px;
+display:flex;
+align-items:center;
+gap:12px;
+transition:.3s;
+text-align:left;
+}
+
+.menu-btn:hover{
+background:#1f2937;
+color:white;
+}
+
+.menu-btn.active{
+background:#22c55e;
+color:white;
+}
+
+/* CONTENIDO */
+
+.contenido{
+margin-left:260px;
+padding:30px;
+width:100%;
+}
+
+.seccion{
+display:none;
+animation:fade .3s ease;
+}
+
+.visible{
+display:block;
+}
+
+@keyframes fade{
+from{
+opacity:0;
+transform:translateY(15px);
+}
+to{
+opacity:1;
+transform:translateY(0);
+}
+}
+
+h1{
+font-size:32px;
+margin-bottom:25px;
+font-weight:700;
+}
+
+/* CARDS */
+
+.cards{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+gap:20px;
+margin-bottom:30px;
+}
+
+.card{
+background:white;
+padding:25px;
+border-radius:18px;
+box-shadow:0 4px 15px rgba(0,0,0,.08);
+}
+
+.card h3{
+font-size:15px;
+color:#6b7280;
+margin-bottom:10px;
+}
+
+.card span{
+font-size:30px;
+font-weight:700;
+color:#111827;
+}
+
+/* PANELS */
+
+.panel{
+background:white;
+padding:25px;
+border-radius:18px;
+box-shadow:0 4px 15px rgba(0,0,0,.08);
+margin-bottom:25px;
+}
+
+.panel h2{
+margin-bottom:20px;
+}
+
+.dashboard-grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:20px;
+}
+
+/* HEADER SECTION */
+
+.header-section{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:20px;
+}
+
+/* BOTONES */
+
+.btn-primary{
+background:#22c55e;
+color:white;
+border:none;
+padding:12px 20px;
+border-radius:10px;
+cursor:pointer;
+font-weight:600;
+transition:.3s;
+}
+
+.btn-primary:hover{
+transform:translateY(-2px);
+}
+
+.btn-secundario{
+background:#ef4444;
+color:white;
+border:none;
+padding:12px 20px;
+border-radius:10px;
+cursor:pointer;
+font-weight:600;
+}
+
+/* TABLAS */
+
+.tabla-container{
+background:white;
+border-radius:18px;
+overflow:hidden;
+box-shadow:0 4px 15px rgba(0,0,0,.08);
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+}
+
+thead{
+background:#111827;
+color:white;
+}
+
+thead th{
+padding:15px;
+text-align:left;
+}
+
+tbody td{
+padding:14px;
+border-bottom:1px solid #e5e7eb;
+}
+
+tbody tr:hover{
+background:#f9fafb;
+}
+
+/* INPUTS */
+
+input,
+select,
+textarea{
+width:100%;
+padding:12px;
+border:1px solid #d1d5db;
+border-radius:10px;
+margin-bottom:12px;
+font-size:14px;
+}
+
+textarea{
+resize:vertical;
+min-height:90px;
+}
+
+.input-busqueda{
+max-width:350px;
+margin-bottom:20px;
+}
+
+/* MODALES */
+
+.modal{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,.5);
+display:none;
+justify-content:center;
+align-items:center;
+z-index:999;
+}
+
+.modal-content{
+background:white;
+width:95%;
+max-width:600px;
+padding:25px;
+border-radius:18px;
+animation:modalIn .2s ease;
+}
+
+@keyframes modalIn{
+from{
+transform:scale(.9);
+opacity:0;
+}
+to{
+transform:scale(1);
+opacity:1;
+}
+}
+
+.modal-content h2{
+margin-bottom:20px;
+}
+
+.acciones{
+display:flex;
+justify-content:flex-end;
+gap:10px;
+margin-top:10px;
+}
+
+/* FILTROS */
+
+.filtros{
+display:flex;
+gap:10px;
+flex-wrap:wrap;
+}
+
+/* ESTADOS */
+
+.estado-vencido{
+background:#ef4444;
+color:white;
+padding:6px 10px;
+border-radius:20px;
+font-size:12px;
+font-weight:600;
+}
+
+.estado-alerta{
+background:#f59e0b;
+color:white;
+padding:6px 10px;
+border-radius:20px;
+font-size:12px;
+font-weight:600;
+}
+
+.estado-ok{
+background:#22c55e;
+color:white;
+padding:6px 10px;
+border-radius:20px;
+font-size:12px;
+font-weight:600;
+}
+
+/* SALDOS */
+
+.saldo-positivo{
+font-weight:700;
+color:#ef4444;
+}
+
+.saldo-cero{
+font-weight:700;
+color:#22c55e;
+}
+
+/* CUENTA CORRIENTE */
+
+.movimiento-venta{
+background:#ecfdf5;
+}
+
+.movimiento-pago{
+background:#eff6ff;
+}
+
+.movimiento-visita{
+background:#faf5ff;
+}
+
+/* RESPONSIVE */
+
+@media(max-width:1100px){
+
+.dashboard-grid{
+grid-template-columns:1fr;
+}
+
+}
+
+@media(max-width:900px){
+
+.sidebar{
+width:80px;
+padding:20px 10px;
+}
+
+.logo span{
+display:none;
+}
+
+.menu-btn{
+justify-content:center;
+}
+
+.menu-btn span{
+display:none;
+}
+
+.contenido{
+margin-left:80px;
+}
+
+}
+
+@media(max-width:700px){
+
+.contenido{
+padding:15px;
+}
+
+.cards{
+grid-template-columns:1fr;
+}
+
+.header-section{
+flex-direction:column;
+align-items:flex-start;
+gap:10px;
+}
+
+thead{
+display:none;
+}
+
+table,
+tbody,
+tr,
+td{
+display:block;
+width:100%;
+}
+
+tr{
+margin-bottom:12px;
+background:white;
+border-radius:12px;
+padding:10px;
+}
+
+td{
+border:none;
+padding:6px 0;
+}
+
+.modal-content{
+width:98%;
+padding:15px;
+}
+
+.filtros{
+flex-direction:column;
+}
+
+}
+
+.loading{
+display:flex;
+justify-content:center;
+align-items:center;
+padding:30px;
+}
+
+.badge{
+display:inline-block;
+padding:5px 10px;
+border-radius:20px;
+font-size:12px;
+font-weight:600;
+}
+
+.badge-success{
+background:#dcfce7;
+color:#166534;
+}
+
+.badge-danger{
+background:#fee2e2;
+color:#991b1b;
+}
+
+.badge-warning{
+background:#fef3c7;
+color:#92400e;
+}
+
+.text-center{
+text-align:center;
+}
+
+.mt-10{
+margin-top:10px;
+}
+
+.mt-20{
+margin-top:20px;
+}
+
+.mt-30{
+margin-top:30px;
+}
+
+.mb-10{
+margin-bottom:10px;
+}
+
+.mb-20{
+margin-bottom:20px;
+}
+
+.mb-30{
+margin-bottom:30px;
+}
+
+</style>
+
+</head>
+
+if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("service-worker.js");
+}
+
+<script>
+
+const API_URL = "https://script.google.com/macros/s/AKfycbwVHS8mCahNTL4IzE8_aSrYpm1mNedjEmLOXdaey-fhryGt5ilCNswbvUX5sd2iQM7pUQ/exec";
+
+let CLIENTES = [];
+let VENTAS = [];
+let PAGOS = [];
+let VISITAS = [];
+
+/* =========================
+   INICIALIZACIÓN
+========================= */
+
+document.addEventListener("DOMContentLoaded", () => {
+    cargarTodo();
+});
+
+async function cargarTodo() {
+    await Promise.all([
+        cargarClientes(),
+        cargarVentas(),
+        cargarPagos(),
+        cargarVisitas()
+    ]);
+
+    renderDashboard();
+    renderClientes();
+    renderVentas();
+    renderPagos();
+    cargarSelects();
+    renderVisitas();
+}
+
+
+
+/* =========================
+   API FETCH
+========================= */
+
+async function apiGet(action) {
+    const res = await fetch(`${API_URL}?action=${action}`);
+    return await res.json();
+}
+
+async function apiPost(data) {
+
+    const formData = new URLSearchParams();
+
+    for (let key in data) {
+        formData.append(key, data[key]);
+    }
+
+    const res = await fetch(API_URL, {
+        method: "POST",
+        body: formData
+    });
+
+    return await res.json();
+}
+
+
+/* =========================
+   CARGA DE DATOS
+========================= */
+
+async function cargarClientes() {
+    CLIENTES = await apiGet("clientes");
+}
+
+async function cargarVentas() {
+    VENTAS = await apiGet("ventas");
+}
+
+async function cargarPagos() {
+    PAGOS = await apiGet("pagos");
+}
+
+async function cargarVisitas() {
+    VISITAS = await apiGet("visitas");
+}
+
+/* =========================
+   DASHBOARD
+========================= */
+
+function renderDashboard() {
+    let totalVentas = 0;
+    let totalPagos = 0;
+
+    VENTAS.slice(1).forEach(v => totalVentas += Number(v[4]) || 0);
+    PAGOS.slice(1).forEach(p => totalPagos += Number(p[3]) || 0);
+
+    const saldo = totalVentas - totalPagos;
+
+    document.getElementById("totalClientes").innerText = CLIENTES.length - 1;
+    document.getElementById("totalVentas").innerText = "$" + totalVentas.toLocaleString();
+    document.getElementById("totalPagos").innerText = "$" + totalPagos.toLocaleString();
+    document.getElementById("saldoGeneral").innerText = "$" + saldo.toLocaleString();
+
+    renderVencidos();
+}
+
+/* =========================
+   CLIENTES
+========================= */
+
+function renderClientes() {
+    const tbody = document.getElementById("tablaClientes");
+    tbody.innerHTML = "";
+
+    CLIENTES.slice(1).forEach(c => {
+
+        const id = c[0];
+        const nombre = c[1];
+        const telefono = c[2];
+        const email = c[3];
+        const diasCredito = Number(c[7]) || 0;
+
+        const saldo = calcularSaldoCliente(id);
+
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+            <td>${nombre}</td>
+            <td>${telefono}</td>
+            <td>${email}</td>
+            <td>${diasCredito}</td>
+            <td>$${saldo}</td>
+            <td>
+                <button onclick="verCuenta(${id})">Ver</button>
+            </td>
+        `;
+
+        tbody.appendChild(tr);
+    });
+}
+
+/* =========================
+   VENTAS
+========================= */
+
+function renderVentas() {
+    const tbody = document.getElementById("tablaVentas");
+    tbody.innerHTML = "";
+
+    VENTAS.slice(1).forEach(v => {
+
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+            <td>${v[2]}</td>
+            <td>${getNombreCliente(v[1])}</td>
+            <td>${v[3]}</td>
+            <td>$${v[4]}</td>
+        `;
+
+        tbody.appendChild(tr);
+    });
+}
+
+/* =========================
+   PAGOS
+========================= */
+
+function renderPagos() {
+    const tbody = document.getElementById("tablaPagos");
+    tbody.innerHTML = "";
+
+    PAGOS.slice(1).forEach(p => {
+
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+            <td>${p[2]}</td>
+            <td>${getNombreCliente(p[1])}</td>
+            <td>$${p[3]}</td>
+            <td>${p[4]}</td>
+        `;
+
+        tbody.appendChild(tr);
+    });
+}
+
+/* =========================
+   VISITAS
+========================= */
+
+function renderVisitas() {
+    const tbody = document.getElementById("tablaVisitas");
+    tbody.innerHTML = "";
+
+    VISITAS.slice(1).forEach(v => {
+
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+            <td>${v[2]}</td>
+            <td>${v[3]}</td>
+            <td>${getNombreCliente(v[1])}</td>
+            <td>${v[4]}</td>
+        `;
+
+        tbody.appendChild(tr);
+    });
+}
+
+/* =========================
+   CUENTA CORRIENTE
+========================= */
+
+function calcularSaldoCliente(clienteID) {
+
+    let ventas = 0;
+    let pagos = 0;
+
+    VENTAS.slice(1).forEach(v => {
+        if (v[1] == clienteID) ventas += Number(v[4]) || 0;
+    });
+
+    PAGOS.slice(1).forEach(p => {
+        if (p[1] == clienteID) pagos += Number(p[3]) || 0;
+    });
+
+    return ventas - pagos;
+}
+
+/* =========================
+   HELPERS
+========================= */
+
+function getNombreCliente(id) {
+    const c = CLIENTES.find(x => x[0] == id);
+    return c ? c[1] : "Desconocido";
+}
+
+/* =========================
+   MODALES (BÁSICO)
+========================= */
+
+function abrirModalCliente() {
+    document.getElementById("modalCliente").style.display = "flex";
+}
+
+function abrirModalVenta() {
+    document.getElementById("modalVenta").style.display = "flex";
+}
+
+function abrirModalPago() {
+    document.getElementById("modalPago").style.display = "flex";
+}
+
+function abrirModalVisita() {
+    document.getElementById("modalVisita").style.display = "flex";
+}
+
+function cerrarModal(id) {
+    document.getElementById(id).style.display = "none";
+}
+
+/* =========================
+   GUARDAR CLIENTE
+========================= */
+
+async function guardarCliente() {
+
+    const data = {
+        action: "nuevoCliente",
+        cliente: document.getElementById("clienteNombre").value,
+        telefono: document.getElementById("clienteTelefono").value,
+        email: document.getElementById("clienteEmail").value,
+        direccion: document.getElementById("clienteDireccion").value,
+        latitud: 0,
+        longitud: 0,
+        diasCredito: document.getElementById("clienteDiasCredito").value,
+        observaciones: document.getElementById("clienteObservaciones").value
+    };
+
+    // si estás editando
+    if (window.CLIENTE_EDITANDO) {
+        data.action = "editarCliente";
+        data.id = window.CLIENTE_EDITANDO;
+    }
+
+    await apiPost(data);
+
+    window.CLIENTE_EDITANDO = null;
+
+    cerrarModal("modalCliente");
+    limpiarModales();
+    cargarTodo();
+}
+
+
+/* =========================
+   GUARDAR VENTA
+========================= */
+
+async function guardarVenta() {
+
+    const data = {
+        action: "nuevaVenta",
+        clienteID: document.getElementById("ventaCliente").value,
+        fecha: document.getElementById("ventaFecha").value,
+        concepto: document.getElementById("ventaConcepto").value,
+        importe: document.getElementById("ventaImporte").value
+    };
+
+    await apiPost(data);
+
+    cerrarModal("modalVenta");
+    cargarTodo();
+}
+
+/* =========================
+   GUARDAR PAGO
+========================= */
+
+async function guardarPago() {
+
+    const data = {
+        action: "nuevoPago",
+        clienteID: document.getElementById("pagoCliente").value,
+        fecha: document.getElementById("pagoFecha").value,
+        importe: document.getElementById("pagoImporte").value,
+        metodoPago: document.getElementById("pagoMetodo").value,
+        observaciones: document.getElementById("pagoObservaciones").value
+    };
+
+    await apiPost(data);
+
+    cerrarModal("modalPago");
+    cargarTodo();
+}
+
+/* =========================
+   GUARDAR VISITA
+========================= */
+
+async function guardarVisita() {
+
+    const data = {
+        action: "nuevaVisita",
+        clienteID: document.getElementById("visitaCliente").value,
+        fecha: new Date().toISOString().split("T")[0],
+        hora: new Date().toLocaleTimeString(),
+        observacion: document.getElementById("visitaObservacion").value,
+        latitud: 0,
+        longitud: 0
+    };
+
+    await apiPost(data);
+
+    cerrarModal("modalVisita");
+    cargarTodo();
+}
+
+/* =========================
+   CUENTA DETALLE
+========================= */
+
+function verCuenta(id) {
+    alert("Cuenta cliente ID: " + id + "\n(Próximo bloque: vista completa + PDF)");
+}
+
+/* =========================
+   NAVEGACIÓN
+========================= */
+
+function mostrarSeccion(id) {
+
+    document.querySelectorAll(".seccion")
+        .forEach(s => s.classList.remove("visible"));
+
+    document.getElementById(id).classList.add("visible");
+}
+
+
+function cargarSelects() {
+
+    const selects = [
+        "ventaCliente",
+        "pagoCliente",
+        "visitaCliente",
+        "clientePDF"
+    ];
+
+    selects.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+
+        el.innerHTML = "<option value=''>Seleccionar cliente</option>";
+
+        CLIENTES.slice(1).forEach(c => {
+            const option = document.createElement("option");
+            option.value = c[0];
+            option.textContent = c[1];
+            el.appendChild(option);
+        });
+    });
+}
+
+
+function obtenerCuentaCliente(clienteID) {
+
+    let movimientos = [];
+
+    // VENTAS
+    VENTAS.slice(1).forEach(v => {
+        if (v[1] == clienteID) {
+            movimientos.push({
+                tipo: "venta",
+                fecha: v[2],
+                descripcion: v[3],
+                importe: Number(v[4])
+            });
+        }
+    });
+
+    // PAGOS
+    PAGOS.slice(1).forEach(p => {
+        if (p[1] == clienteID) {
+            movimientos.push({
+                tipo: "pago",
+                fecha: p[2],
+                descripcion: p[4],
+                importe: Number(p[3])
+            });
+        }
+    });
+
+    // ORDENAR POR FECHA
+    movimientos.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+
+    let saldo = 0;
+
+    movimientos = movimientos.map(m => {
+
+        if (m.tipo === "venta") saldo += m.importe;
+        if (m.tipo === "pago") saldo -= m.importe;
+
+        return {
+            ...m,
+            saldo
+        };
+
+    });
+
+    return movimientos;
+}
+
+
+
+function verCuenta(clienteID) {
+
+    const cliente = CLIENTES.find(c => c[0] == clienteID);
+
+    const movimientos = obtenerCuentaCliente(clienteID);
+
+    let html = `
+        <h2>${cliente[1]}</h2>
+        <h4>Cuenta Corriente</h4>
+
+        <table style="width:100%; margin-top:15px;">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Tipo</th>
+                    <th>Descripción</th>
+                    <th>Importe</th>
+                    <th>Saldo</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    movimientos.forEach(m => {
+
+        html += `
+            <tr>
+                <td>${m.fecha}</td>
+                <td>${m.tipo}</td>
+                <td>${m.descripcion}</td>
+                <td>$${m.importe}</td>
+                <td>$${m.saldo}</td>
+            </tr>
+        `;
+    });
+
+    html += `</tbody></table>`;
+
+    // SALDO FINAL
+    const saldoFinal = movimientos.length
+        ? movimientos[movimientos.length - 1].saldo
+        : 0;
+
+    html += `
+        <h3 style="margin-top:15px;">
+            Saldo actual: $${saldoFinal}
+        </h3>
+
+        <button onclick="generarPDFCliente(${clienteID})" class="btn-primary">
+            Exportar PDF
+        </button>
+    `;
+
+    const win = window.open("", "_blank");
+    win.document.write(html);
+}
+
+function estadoDeuda(clienteID) {
+
+    const cliente = CLIENTES.find(c => c[0] == clienteID);
+
+    const diasCredito = Number(cliente[7]) || 0;
+
+    let ultimaVenta = null;
+
+    VENTAS.slice(1).forEach(v => {
+        if (v[1] == clienteID) {
+            const fecha = new Date(v[2]);
+            if (!ultimaVenta || fecha > ultimaVenta) {
+                ultimaVenta = fecha;
+            }
+        }
+    });
+
+    if (!ultimaVenta) return "sin datos";
+
+    const vencimiento = new Date(ultimaVenta);
+    vencimiento.setDate(vencimiento.getDate() + diasCredito);
+
+    const hoy = new Date();
+
+    const diff = Math.floor((vencimiento - hoy) / (1000 * 60 * 60 * 24));
+
+    if (diff < 0) return "vencido";
+    if (diff <= 7) return "alerta";
+    return "ok";
+}
+
+function renderVencidos() {
+
+    const cont = document.getElementById("clientesVencidos");
+    cont.innerHTML = "";
+
+    CLIENTES.slice(1).forEach(c => {
+
+        const estado = estadoDeuda(c[0]);
+
+        if (estado === "vencido") {
+
+            const div = document.createElement("div");
+            div.className = "estado-vencido";
+            div.innerText = c[1];
+
+            cont.appendChild(div);
+        }
+    });
+}
+
+function renderProximosVencimientos() {
+
+    const cont = document.getElementById("proximosVencimientos");
+    cont.innerHTML = "";
+
+    CLIENTES.slice(1).forEach(c => {
+
+        const estado = estadoDeuda(c[0]);
+
+        if (estado === "alerta") {
+
+            const div = document.createElement("div");
+            div.className = "estado-alerta";
+            div.innerText = c[1];
+
+            cont.appendChild(div);
+        }
+    });
+}
+
+
+async function generarPDFCliente(clienteID = null) {
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    if (!clienteID) {
+        clienteID = document.getElementById("clientePDF").value;
+    }
+
+    const cliente = CLIENTES.find(c => c[0] == clienteID);
+
+    const movimientos = obtenerCuentaCliente(clienteID);
+
+    doc.setFontSize(16);
+    doc.text("ESTADO DE CUENTA", 20, 20);
+
+    doc.setFontSize(12);
+    doc.text(`Cliente: ${cliente[1]}`, 20, 35);
+    doc.text(`Tel: ${cliente[2] || ""}`, 20, 42);
+
+    let y = 55;
+
+    doc.text("Movimientos:", 20, y);
+    y += 10;
+
+    movimientos.forEach(m => {
+
+        const linea = `${m.fecha} | ${m.tipo.toUpperCase()} | $${m.importe} | Saldo: $${m.saldo}`;
+
+        doc.text(linea, 20, y);
+
+        y += 7;
+
+        if (y > 270) {
+            doc.addPage();
+            y = 20;
+        }
+    });
+
+    const saldoFinal = movimientos.length
+        ? movimientos[movimientos.length - 1].saldo
+        : 0;
+
+    y += 10;
+    doc.text(`SALDO FINAL: $${saldoFinal}`, 20, y);
+
+    doc.save(`cuenta_${cliente[1]}.pdf`);
+}
+
+
+
+function generarPDFFechas() {
+
+    const desde = document.getElementById("fechaDesde").value;
+    const hasta = document.getElementById("fechaHasta").value;
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    doc.setFontSize(16);
+    doc.text("REPORTE POR FECHAS", 20, 20);
+
+    doc.setFontSize(12);
+    doc.text(`Desde: ${desde}`, 20, 30);
+    doc.text(`Hasta: ${hasta}`, 20, 37);
+
+    let y = 50;
+
+    const movimientos = [];
+
+    // VENTAS
+    VENTAS.slice(1).forEach(v => {
+        if (v[2] >= desde && v[2] <= hasta) {
+            movimientos.push({
+                fecha: v[2],
+                tipo: "VENTA",
+                descripcion: v[3],
+                importe: v[4]
+            });
+        }
+    });
+
+    // PAGOS
+    PAGOS.slice(1).forEach(p => {
+        if (p[2] >= desde && p[2] <= hasta) {
+            movimientos.push({
+                fecha: p[2],
+                tipo: "PAGO",
+                descripcion: p[4],
+                importe: p[3]
+            });
+        }
+    });
+
+    movimientos.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+
+    let totalVentas = 0;
+    let totalPagos = 0;
+
+    movimientos.forEach(m => {
+
+        if (m.tipo === "VENTA") totalVentas += Number(m.importe);
+        if (m.tipo === "PAGO") totalPagos += Number(m.importe);
+
+        doc.text(
+            `${m.fecha} | ${m.tipo} | ${m.descripcion} | $${m.importe}`,
+            20,
+            y
+        );
+
+        y += 7;
+
+        if (y > 270) {
+            doc.addPage();
+            y = 20;
+        }
+    });
+
+    y += 10;
+
+    doc.text(`TOTAL VENTAS: $${totalVentas}`, 20, y);
+    y += 7;
+    doc.text(`TOTAL PAGOS: $${totalPagos}`, 20, y);
+    y += 7;
+    doc.text(`SALDO: $${totalVentas - totalPagos}`, 20, y);
+
+    doc.save("reporte_movimientos.pdf");
+}
+
+
+function limpiarModales() {
+
+    document.querySelectorAll("input, textarea").forEach(el => {
+        if (el.type !== "date") el.value = "";
+    });
+}
+
+
+
+function editarCliente(id) {
+
+    const cliente = CLIENTES.find(c => c[0] == id);
+
+    document.getElementById("clienteNombre").value = cliente[1];
+    document.getElementById("clienteTelefono").value = cliente[2];
+    document.getElementById("clienteEmail").value = cliente[3];
+    document.getElementById("clienteDireccion").value = cliente[4];
+    document.getElementById("clienteDiasCredito").value = cliente[7];
+    document.getElementById("clienteObservaciones").value = cliente[8];
+
+    abrirModalCliente();
+
+    // guardamos ID temporal
+    window.CLIENTE_EDITANDO = id;
+}
+
+function setSelects() {
+
+    const clientes = CLIENTES.slice(1);
+
+    ["ventaCliente","pagoCliente","visitaCliente","clientePDF"].forEach(id => {
+
+        const el = document.getElementById(id);
+        if (!el) return;
+
+        el.innerHTML = "";
+
+        clientes.forEach(c => {
+
+            const opt = document.createElement("option");
+            opt.value = c[0];
+            opt.textContent = c[1];
+
+            el.appendChild(opt);
+        });
+    });
+}
+
+</script>
+
+<body>
+
+<div class="app">
+
+    <!-- SIDEBAR -->
+
+    <aside class="sidebar">
+
+        <div class="logo">
+            <i class="fa-solid fa-chart-line"></i>
+            <span>CRM</span>
+        </div>
+
+        <nav>
+
+            <button class="menu-btn active" onclick="mostrarSeccion('dashboard')">
+                <i class="fa-solid fa-gauge"></i>
+                Dashboard
+            </button>
+
+            <button class="menu-btn" onclick="mostrarSeccion('clientes')">
+                <i class="fa-solid fa-users"></i>
+                Clientes
+            </button>
+
+            <button class="menu-btn" onclick="mostrarSeccion('ventas')">
+                <i class="fa-solid fa-file-invoice-dollar"></i>
+                Ventas
+            </button>
+
+            <button class="menu-btn" onclick="mostrarSeccion('pagos')">
+                <i class="fa-solid fa-money-bill-wave"></i>
+                Pagos
+            </button>
+
+            <button class="menu-btn" onclick="mostrarSeccion('visitas')">
+                <i class="fa-solid fa-location-dot"></i>
+                Visitas
+            </button>
+
+            <button class="menu-btn" onclick="mostrarSeccion('reportes')">
+                <i class="fa-solid fa-file-pdf"></i>
+                Reportes
+            </button>
+
+        </nav>
+
+    </aside>
+
+    <!-- CONTENIDO -->
+
+    <main class="contenido">
+
+        <!-- DASHBOARD -->
+
+        <section id="dashboard" class="seccion visible">
+
+            <h1>Dashboard</h1>
+
+            <div class="cards">
+
+                <div class="card">
+                    <h3>Clientes</h3>
+                    <span id="totalClientes">0</span>
+                </div>
+
+                <div class="card">
+                    <h3>Ventas</h3>
+                    <span id="totalVentas">$0</span>
+                </div>
+
+                <div class="card">
+                    <h3>Pagos</h3>
+                    <span id="totalPagos">$0</span>
+                </div>
+
+                <div class="card">
+                    <h3>Saldo</h3>
+                    <span id="saldoGeneral">$0</span>
+                </div>
+
+            </div>
+
+            <div class="dashboard-grid">
+
+                <div class="panel">
+
+                    <h2>Clientes con deuda vencida</h2>
+
+                    <div id="clientesVencidos"></div>
+
+                </div>
+
+                <div class="panel">
+
+                    <h2>Próximos vencimientos</h2>
+
+                    <div id="proximosVencimientos"></div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- CLIENTES -->
+
+        <section id="clientes" class="seccion">
+
+            <div class="header-section">
+
+                <h1>Clientes</h1>
+
+                <button class="btn-primary" onclick="abrirModalCliente()">
+                    Nuevo Cliente
+                </button>
+
+            </div>
+
+            <input
+                type="text"
+                id="buscarCliente"
+                placeholder="Buscar cliente..."
+                class="input-busqueda"
+            >
+
+            <div class="tabla-container">
+
+                <table>
+
+                    <thead>
+
+                    <tr>
+                        <th>Cliente</th>
+                        <th>Teléfono</th>
+                        <th>Email</th>
+                        <th>Días Crédito</th>
+                        <th>Saldo</th>
+                        <th>Acciones</th>
+                    </tr>
+
+                    </thead>
+
+                    <tbody id="tablaClientes"></tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+        <!-- VENTAS -->
+
+        <section id="ventas" class="seccion">
+
+            <div class="header-section">
+
+                <h1>Ventas</h1>
+
+                <button class="btn-primary" onclick="abrirModalVenta()">
+                    Nueva Venta
+                </button>
+
+            </div>
+
+            <div class="tabla-container">
+
+                <table>
+
+                    <thead>
+
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Cliente</th>
+                        <th>Concepto</th>
+                        <th>Importe</th>
+                    </tr>
+
+                    </thead>
+
+                    <tbody id="tablaVentas"></tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+        <!-- PAGOS -->
+
+        <section id="pagos" class="seccion">
+
+            <div class="header-section">
+
+                <h1>Pagos</h1>
+
+                <button class="btn-primary" onclick="abrirModalPago()">
+                    Registrar Pago
+                </button>
+
+            </div>
+
+            <div class="tabla-container">
+
+                <table>
+
+                    <thead>
+
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Cliente</th>
+                        <th>Importe</th>
+                        <th>Método</th>
+                    </tr>
+
+                    </thead>
+
+                    <tbody id="tablaPagos"></tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+        <!-- VISITAS -->
+
+        <section id="visitas" class="seccion">
+
+            <div class="header-section">
+
+                <h1>Visitas</h1>
+
+                <button class="btn-primary" onclick="abrirModalVisita()">
+                    Registrar Visita
+                </button>
+
+            </div>
+
+            <div class="tabla-container">
+
+                <table>
+
+                    <thead>
+
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Hora</th>
+                        <th>Cliente</th>
+                        <th>Observación</th>
+                    </tr>
+
+                    </thead>
+
+                    <tbody id="tablaVisitas"></tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+        <!-- REPORTES -->
+
+        <section id="reportes" class="seccion">
+
+            <h1>Reportes PDF</h1>
+
+            <div class="panel">
+
+                <h3>Movimientos por Fecha</h3>
+
+                <div class="filtros">
+
+                    <input type="date" id="fechaDesde">
+
+                    <input type="date" id="fechaHasta">
+
+                    <button class="btn-primary" onclick="generarPDFFechas()">
+                        Exportar PDF
+                    </button>
+
+                </div>
+
+            </div>
+
+            <div class="panel">
+
+                <h3>Estado de Cuenta Cliente</h3>
+
+                <select id="clientePDF"></select>
+
+                <button
+                    class="btn-primary"
+                    onclick="generarPDFCliente()">
+
+                    Generar PDF
+
+                </button>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+<!-- MODAL CLIENTE -->
+
+<div class="modal" id="modalCliente">
+
+    <div class="modal-content">
+
+        <h2>Nuevo Cliente</h2>
+
+        <input id="clienteNombre" placeholder="Cliente">
+
+        <input id="clienteTelefono" placeholder="Teléfono">
+
+        <input id="clienteEmail" placeholder="Email">
+
+        <input id="clienteDireccion" placeholder="Dirección">
+
+        <input id="clienteDiasCredito" type="number" placeholder="Días Crédito">
+
+        <textarea
+            id="clienteObservaciones"
+            placeholder="Observaciones">
+        </textarea>
+
+        <div class="acciones">
+
+            <button onclick="guardarCliente()" class="btn-primary">
+                Guardar
+            </button>
+
+            <button onclick="cerrarModal('modalCliente')" class="btn-secundario">
+                Cancelar
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- MODAL VENTA -->
+
+<div class="modal" id="modalVenta">
+
+    <div class="modal-content">
+
+        <h2>Nueva Venta</h2>
+
+        <select id="ventaCliente"></select>
+
+        <input type="date" id="ventaFecha">
+
+        <input id="ventaConcepto" placeholder="Concepto">
+
+        <input id="ventaImporte" type="number" placeholder="Importe">
+
+        <div class="acciones">
+
+            <button onclick="guardarVenta()" class="btn-primary">
+                Guardar
+            </button>
+
+            <button onclick="cerrarModal('modalVenta')" class="btn-secundario">
+                Cancelar
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- MODAL PAGO -->
+
+<div class="modal" id="modalPago">
+
+    <div class="modal-content">
+
+        <h2>Nuevo Pago</h2>
+
+        <select id="pagoCliente"></select>
+
+        <input type="date" id="pagoFecha">
+
+        <input id="pagoImporte" type="number" placeholder="Importe">
+
+        <input id="pagoMetodo" placeholder="Método de pago">
+
+        <textarea id="pagoObservaciones"></textarea>
+
+        <div class="acciones">
+
+            <button onclick="guardarPago()" class="btn-primary">
+                Guardar
+            </button>
+
+            <button onclick="cerrarModal('modalPago')" class="btn-secundario">
+                Cancelar
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- MODAL VISITA -->
+
+<div class="modal" id="modalVisita">
+
+    <div class="modal-content">
+
+        <h2>Nueva Visita</h2>
+
+        <select id="visitaCliente"></select>
+
+        <textarea
+            id="visitaObservacion"
+            placeholder="Observación">
+        </textarea>
+
+        <div class="acciones">
+
+            <button onclick="guardarVisita()" class="btn-primary">
+                Guardar
+            </button>
+
+            <button onclick="cerrarModal('modalVisita')" class="btn-secundario">
+                Cancelar
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="app.js"></script>
+
+</body>
+</html>
+
