@@ -2,486 +2,702 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GestiónClientes Pro</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1B3A5C">
+<title>GestiónPro-MAC / Fernando Tarchini</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <style>
-  :root {
-    --bg: #F0F4FA;
-    --surface: #FFFFFF;
-    --primary: #1B3A5C;
-    --accent: #2E8BC0;
-    --accent-light: #EBF5FB;
-    --success: #27AE60;
-    --warning: #E67E22;
-    --danger: #E74C3C;
-    --text: #1A2332;
-    --text-muted: #6B7A90;
-    --border: #DDE3ED;
-    --shadow: 0 2px 12px rgba(27,58,92,0.08);
-    --shadow-lg: 0 8px 32px rgba(27,58,92,0.14);
-    --radius: 12px;
-    --radius-sm: 8px;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+:root {
+  --bg: #F0F4FA;
+  --surface: #FFFFFF;
+  --primary: #1B3A5C;
+  --accent: #2E8BC0;
+  --accent-light: #EBF5FB;
+  --success: #27AE60;
+  --warning: #E67E22;
+  --danger: #E74C3C;
+  --text: #1A2332;
+  --muted: #6B7A90;
+  --border: #DDE3ED;
+  --shadow: 0 2px 12px rgba(27,58,92,0.08);
+  --shadow-lg: 0 8px 32px rgba(27,58,92,0.16);
+  --r: 14px;
+  --r-sm: 10px;
+  --nav-h: 68px;
+  --top-h: 56px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html { height: 100%; }
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100%;
+  overscroll-behavior: none;
+  -webkit-font-smoothing: antialiased;
+}
 
-  /* ── LAYOUT ── */
-  .app { display: flex; min-height: 100vh; }
-  .sidebar {
-    width: 260px; min-height: 100vh; background: var(--primary);
-    display: flex; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 100;
-    transition: transform .3s;
-  }
-  .sidebar.collapsed { transform: translateX(-260px); }
-  .main { margin-left: 260px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; transition: margin .3s; }
-  .main.full { margin-left: 0; }
+/* ── TOPBAR ── */
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: var(--top-h);
+  background: var(--primary);
+  display: flex; align-items: center; padding: 0 16px; gap: 12px;
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.topbar-logo { color: #fff; font-size: 17px; font-weight: 800; flex: 1; letter-spacing: -.3px; }
+.topbar-logo span { color: #5BC8F5; }
+.topbar-btn {
+  width: 40px; height: 40px; border-radius: 10px;
+  background: rgba(255,255,255,.12); border: none; color: #fff;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  flex-shrink: 0;
+}
+.topbar-btn svg { width: 20px; height: 20px; }
+.topbar-btn.accent { background: var(--accent); }
+.topbar-sync-badge {
+  position: absolute; top: 6px; right: 6px; width: 8px; height: 8px;
+  border-radius: 50%; background: var(--warning); border: 2px solid var(--primary);
+}
 
-  /* ── SIDEBAR ── */
-  .sidebar-logo {
-    padding: 28px 24px 20px;
-    border-bottom: 1px solid rgba(255,255,255,.1);
-  }
-  .sidebar-logo h1 { color: #fff; font-size: 18px; font-weight: 800; letter-spacing: -.3px; }
-  .sidebar-logo span { color: var(--accent); }
-  .sidebar-logo p { color: rgba(255,255,255,.5); font-size: 11px; margin-top: 2px; }
-  .nav { flex: 1; padding: 16px 12px; }
-  .nav-item {
-    display: flex; align-items: center; gap: 12px;
-    padding: 12px 14px; border-radius: var(--radius-sm);
-    color: rgba(255,255,255,.65); cursor: pointer;
-    font-size: 14px; font-weight: 500; margin-bottom: 4px;
-    transition: all .2s; border: none; background: none; width: 100%; text-align: left;
-  }
-  .nav-item:hover { background: rgba(255,255,255,.08); color: #fff; }
-  .nav-item.active { background: var(--accent); color: #fff; }
-  .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
-  .sidebar-config {
-    padding: 16px; border-top: 1px solid rgba(255,255,255,.1);
-    font-size: 11px; color: rgba(255,255,255,.4);
-  }
-  .sidebar-config input {
-    width: 100%; padding: 8px 10px; border-radius: 6px;
-    border: 1px solid rgba(255,255,255,.15); background: rgba(255,255,255,.07);
-    color: rgba(255,255,255,.8); font-size: 11px; font-family: inherit; margin-top: 5px;
-    outline: none;
-  }
-  .sidebar-config input::placeholder { color: rgba(255,255,255,.3); }
+/* ── BOTTOM NAV ── */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  display: flex;
+  padding-bottom: var(--safe-bottom);
+  box-shadow: 0 -4px 20px rgba(27,58,92,0.10);
+}
+.nav-tab {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 3px; height: var(--nav-h);
+  background: none; border: none; cursor: pointer;
+  color: var(--muted); font-size: 10px; font-weight: 600;
+  font-family: inherit; transition: color .2s; position: relative;
+  padding: 0; min-width: 0;
+}
+.nav-tab svg { width: 22px; height: 22px; transition: transform .2s; }
+.nav-tab.active { color: var(--accent); }
+.nav-tab.active svg { transform: scale(1.15); }
+.nav-tab .badge {
+  position: absolute; top: 10px; right: calc(50% - 18px);
+  background: var(--danger); color: #fff;
+  font-size: 9px; font-weight: 800;
+  min-width: 16px; height: 16px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center; padding: 0 3px;
+}
+.nav-fab {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: var(--accent); border: none; color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 16px rgba(46,139,192,.5);
+  cursor: pointer; margin: 0 4px; flex-shrink: 0; align-self: center;
+  transition: transform .15s, box-shadow .15s;
+}
+.nav-fab:active { transform: scale(.93); box-shadow: 0 2px 8px rgba(46,139,192,.4); }
+.nav-fab svg { width: 26px; height: 26px; }
 
-  /* ── TOPBAR ── */
-  .topbar {
-    background: var(--surface); border-bottom: 1px solid var(--border);
-    padding: 0 24px; height: 60px; display: flex; align-items: center; gap: 16px;
-    position: sticky; top: 0; z-index: 50;
-  }
-  .topbar-toggle {
-    background: none; border: none; cursor: pointer; color: var(--primary);
-    padding: 6px; border-radius: 6px; display: flex; align-items: center;
-  }
-  .topbar-title { font-weight: 700; font-size: 16px; color: var(--primary); flex: 1; }
-  .topbar-actions { display: flex; gap: 8px; }
-  .btn {
-    display: inline-flex; align-items: center; gap: 7px;
-    padding: 9px 16px; border-radius: var(--radius-sm); font-size: 13px;
-    font-weight: 600; cursor: pointer; border: none; font-family: inherit;
-    transition: all .18s; text-decoration: none;
-  }
-  .btn-primary { background: var(--accent); color: #fff; }
-  .btn-primary:hover { background: #2475a8; }
-  .btn-success { background: var(--success); color: #fff; }
-  .btn-success:hover { background: #219150; }
-  .btn-warning { background: var(--warning); color: #fff; }
-  .btn-danger { background: var(--danger); color: #fff; }
-  .btn-outline { background: transparent; color: var(--accent); border: 1.5px solid var(--accent); }
-  .btn-outline:hover { background: var(--accent-light); }
-  .btn-sm { padding: 6px 12px; font-size: 12px; }
-  .btn svg { width: 15px; height: 15px; }
+/* ── MAIN CONTENT ── */
+.main {
+  padding-top: calc(var(--top-h) + env(safe-area-inset-top, 0px) + 12px);
+  padding-bottom: calc(var(--nav-h) + var(--safe-bottom) + 16px);
+  padding-left: 14px; padding-right: 14px;
+  min-height: 100vh;
+}
+.page { display: none; }
+.page.active { display: block; }
 
-  /* ── CONTENT ── */
-  .content { padding: 28px 28px 48px; flex: 1; }
-  .page { display: none; }
-  .page.active { display: block; }
+/* ── STATS GRID ── */
+.stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
+.stat-card {
+  background: var(--surface); border-radius: var(--r); padding: 16px;
+  box-shadow: var(--shadow);
+}
+.stat-label { font-size: 11px; color: var(--muted); font-weight: 500; margin-bottom: 4px; }
+.stat-value { font-size: 26px; font-weight: 800; color: var(--primary); line-height: 1; }
+.stat-value.red { color: var(--danger); }
+.stat-value.orange { color: var(--warning); }
+.stat-value.green { color: var(--success); }
+.stat-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.stat-icon-row { display: flex; align-items: center; gap: 8px; }
+.stat-dot { width: 10px; height: 10px; border-radius: 50%; }
+.stat-dot.green { background: var(--success); }
+.stat-dot.orange { background: var(--warning); }
+.stat-dot.red { background: var(--danger); box-shadow: 0 0 6px var(--danger); animation: pulse 1.4s infinite; }
 
-  /* ── CARDS ── */
-  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 16px; margin-bottom: 28px; }
-  .stat-card {
-    background: var(--surface); border-radius: var(--radius); padding: 20px;
-    box-shadow: var(--shadow); display: flex; align-items: center; gap: 16px;
-  }
-  .stat-icon {
-    width: 48px; height: 48px; border-radius: 12px;
-    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-  }
-  .stat-icon svg { width: 22px; height: 22px; }
-  .stat-icon.blue { background: #EBF5FB; color: var(--accent); }
-  .stat-icon.green { background: #EAFAF1; color: var(--success); }
-  .stat-icon.orange { background: #FEF9E7; color: var(--warning); }
-  .stat-icon.red { background: #FDEDEC; color: var(--danger); }
-  .stat-label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
-  .stat-value { font-size: 24px; font-weight: 800; color: var(--primary); line-height: 1.1; }
-  .stat-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+/* ── SECTION HEADER ── */
+.sec-hdr { display: flex; align-items: center; justify-content: space-between; margin: 20px 0 12px; }
+.sec-title { font-size: 15px; font-weight: 700; color: var(--primary); }
+.sec-link { font-size: 13px; color: var(--accent); font-weight: 600; background: none; border: none; cursor: pointer; }
 
-  /* ── SECTION HEADER ── */
-  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
-  .section-title { font-size: 17px; font-weight: 700; color: var(--primary); }
+/* ── CLIENT CARDS ── */
+.client-card {
+  background: var(--surface); border-radius: var(--r); padding: 16px;
+  box-shadow: var(--shadow); margin-bottom: 10px;
+  border-left: 4px solid var(--border);
+  cursor: pointer; transition: box-shadow .15s;
+  -webkit-user-select: none; user-select: none;
+}
+.client-card:active { box-shadow: var(--shadow-lg); }
+.client-card.ok { border-left-color: var(--success); }
+.client-card.warning { border-left-color: var(--warning); }
+.client-card.danger { border-left-color: var(--danger); }
+.cc-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
+.cc-name { font-size: 15px; font-weight: 700; color: var(--primary); line-height: 1.2; }
+.cc-addr { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.cc-badge {
+  font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 20px; white-space: nowrap; flex-shrink: 0;
+}
+.cc-badge.ok { background: #EAFAF1; color: var(--success); }
+.cc-badge.warning { background: #FEF9E7; color: var(--warning); }
+.cc-badge.danger { background: #FDEDEC; color: var(--danger); }
+.cc-mid { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.cc-balance { font-size: 24px; font-weight: 800; }
+.cc-balance.debt { color: var(--danger); }
+.cc-balance.paid { color: var(--success); }
+.semaphore { display: flex; gap: 5px; align-items: center; }
+.sem-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--border); }
+.sem-dot.g { background: var(--success); box-shadow: 0 0 5px var(--success); }
+.sem-dot.y { background: var(--warning); box-shadow: 0 0 5px var(--warning); }
+.sem-dot.r { background: var(--danger); box-shadow: 0 0 5px var(--danger); animation: pulse 1.2s infinite; }
+.cc-meta { display: flex; gap: 10px; font-size: 11px; color: var(--muted); flex-wrap: wrap; }
+.cc-actions {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+  margin-top: 12px; border-top: 1px solid var(--border); padding-top: 12px;
+}
+.cc-actions .btn-icon {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  height: 40px; border-radius: var(--r-sm); font-size: 12px; font-weight: 600;
+  border: none; cursor: pointer; font-family: inherit;
+}
+.cc-actions .btn-icon.primary { background: var(--accent); color: #fff; }
+.cc-actions .btn-icon.success { background: var(--success); color: #fff; }
 
-  /* ── CLIENTES GRID ── */
-  .clients-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
-  .client-card {
-    background: var(--surface); border-radius: var(--radius); padding: 20px;
-    box-shadow: var(--shadow); cursor: pointer; transition: all .2s;
-    border-left: 4px solid var(--border);
-  }
-  .client-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
-  .client-card.debt-ok { border-left-color: var(--success); }
-  .client-card.debt-warning { border-left-color: var(--warning); }
-  .client-card.debt-danger { border-left-color: var(--danger); }
-  .client-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
-  .client-name { font-weight: 700; font-size: 15px; color: var(--primary); }
-  .client-address { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
-  .debt-badge {
-    font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px;
-  }
-  .debt-badge.ok { background: #EAFAF1; color: var(--success); }
-  .debt-badge.warning { background: #FEF9E7; color: var(--warning); }
-  .debt-badge.danger { background: #FDEDEC; color: var(--danger); }
-  .client-balance { font-size: 22px; font-weight: 800; margin: 8px 0 4px; }
-  .client-balance.positive { color: var(--danger); }
-  .client-balance.zero { color: var(--success); }
-  .client-meta { display: flex; gap: 12px; font-size: 11px; color: var(--text-muted); }
-  .client-actions { display: flex; gap: 8px; margin-top: 14px; border-top: 1px solid var(--border); padding-top: 12px; }
+/* ── MOV LIST ── */
+.mov-item {
+  background: var(--surface); border-radius: var(--r-sm); padding: 13px 14px;
+  margin-bottom: 8px; box-shadow: var(--shadow);
+  display: flex; align-items: center; gap: 12px;
+}
+.mov-icon {
+  width: 38px; height: 38px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 16px;
+}
+.mov-icon.venta { background: #EBF5FB; }
+.mov-icon.pago { background: #EAFAF1; }
+.mov-icon.nota { background: #F5EEF8; }
+.mov-body { flex: 1; min-width: 0; }
+.mov-name { font-size: 13px; font-weight: 600; color: var(--primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mov-sub { font-size: 11px; color: var(--muted); }
+.mov-amount { font-size: 15px; font-weight: 800; text-align: right; white-space: nowrap; }
+.mov-amount.plus { color: var(--danger); }
+.mov-amount.minus { color: var(--success); }
 
-  /* ── DEBT SEMAPHORE ── */
-  .semaphore { display: flex; gap: 4px; align-items: center; }
-  .sem-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); transition: background .3s; }
-  .sem-dot.active.green { background: var(--success); box-shadow: 0 0 6px var(--success); }
-  .sem-dot.active.yellow { background: var(--warning); box-shadow: 0 0 6px var(--warning); }
-  .sem-dot.active.red { background: var(--danger); box-shadow: 0 0 6px var(--danger); animation: pulse 1.2s infinite; }
-  @keyframes pulse { 0%,100% { box-shadow: 0 0 6px var(--danger); } 50% { box-shadow: 0 0 14px var(--danger); } }
+/* ── ALERT CARDS ── */
+.alert-card {
+  background: var(--surface); border-radius: var(--r); padding: 14px 16px;
+  margin-bottom: 10px; box-shadow: var(--shadow); border-left: 4px solid;
+}
+.alert-card.warning { border-left-color: var(--warning); }
+.alert-card.danger { border-left-color: var(--danger); }
+.alert-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+.alert-name { font-size: 14px; font-weight: 700; color: var(--primary); }
+.alert-days { font-size: 12px; font-weight: 700; }
+.alert-days.warning { color: var(--warning); }
+.alert-days.danger { color: var(--danger); }
+.alert-amount { font-size: 20px; font-weight: 800; color: var(--danger); margin: 4px 0; }
+.alert-actions { display: flex; gap: 8px; margin-top: 10px; }
+.alert-actions button {
+  flex: 1; height: 38px; border-radius: var(--r-sm); border: none; font-family: inherit;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+}
+.alert-actions .btn-cc { background: var(--accent-light); color: var(--accent); }
+.alert-actions .btn-pay { background: var(--success); color: #fff; }
 
-  /* ── TABLE ── */
-  .table-wrap { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  thead th { background: var(--primary); color: #fff; padding: 12px 16px; text-align: left; font-weight: 600; font-size: 12px; letter-spacing: .4px; }
-  tbody td { padding: 12px 16px; border-bottom: 1px solid var(--border); }
-  tbody tr:last-child td { border-bottom: none; }
-  tbody tr:hover td { background: var(--accent-light); }
-  .type-badge {
-    font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px;
-  }
-  .type-venta { background: #EBF5FB; color: var(--accent); }
-  .type-pago { background: #EAFAF1; color: var(--success); }
-  .type-nota { background: #F5EEF8; color: #8E44AD; }
+/* ── DRAWER (bottom sheet) ── */
+.drawer-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 200;
+  display: none; align-items: flex-end;
+}
+.drawer-overlay.show { display: flex; }
+.drawer {
+  background: var(--surface); width: 100%; border-radius: 20px 20px 0 0;
+  padding: 0 0 calc(20px + var(--safe-bottom));
+  max-height: 92vh; overflow-y: auto;
+  animation: slideUp .28s ease;
+  -webkit-overflow-scrolling: touch;
+}
+@keyframes slideUp { from { transform: translateY(60px); opacity: .5; } to { transform: none; opacity: 1; } }
+.drawer-handle {
+  width: 40px; height: 4px; background: var(--border);
+  border-radius: 2px; margin: 12px auto 0;
+}
+.drawer-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px 12px; border-bottom: 1px solid var(--border);
+}
+.drawer-title { font-size: 17px; font-weight: 700; color: var(--primary); }
+.drawer-close {
+  width: 32px; height: 32px; border-radius: 50%; background: var(--bg);
+  border: none; display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.drawer-body { padding: 18px 20px; }
+.drawer-footer {
+  padding: 12px 20px 0; display: flex; gap: 10px;
+}
 
-  /* ── MODAL ── */
-  .overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,.45);
-    display: none; align-items: center; justify-content: center; z-index: 200;
-    padding: 16px;
-  }
-  .overlay.show { display: flex; }
-  .modal {
-    background: var(--surface); border-radius: var(--radius); width: 100%;
-    max-width: 520px; box-shadow: var(--shadow-lg); max-height: 90vh; overflow-y: auto;
-  }
-  .modal-lg { max-width: 760px; }
-  .modal-xl { max-width: 96vw; max-height: 96vh; }
-  .modal-header {
-    padding: 22px 24px 18px; border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .modal-title { font-size: 17px; font-weight: 700; color: var(--primary); }
-  .modal-close {
-    background: none; border: none; cursor: pointer; color: var(--text-muted);
-    padding: 6px; border-radius: 6px; display: flex; transition: color .2s;
-  }
-  .modal-close:hover { color: var(--danger); }
-  .modal-body { padding: 24px; }
-  .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
+/* ── FULL SCREEN MODAL (cuenta corriente) ── */
+.fullscreen {
+  position: fixed; inset: 0; background: var(--bg); z-index: 300;
+  display: none; flex-direction: column;
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.fullscreen.show { display: flex; }
+.fs-topbar {
+  background: var(--primary); color: #fff;
+  padding: 14px 16px; display: flex; align-items: center; gap: 12px;
+  flex-shrink: 0;
+}
+.fs-back {
+  width: 36px; height: 36px; border-radius: 9px;
+  background: rgba(255,255,255,.15); border: none; color: #fff;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.fs-title { flex: 1; font-weight: 700; font-size: 16px; }
+.fs-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.fs-header {
+  background: linear-gradient(135deg, var(--primary) 0%, #2E5A8E 100%);
+  padding: 20px 16px 24px; color: #fff;
+}
+.fs-client-name { font-size: 20px; font-weight: 800; }
+.fs-client-sub { font-size: 12px; opacity: .7; margin-top: 3px; }
+.fs-balances {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 18px;
+}
+.fs-bal-item label { font-size: 10px; opacity: .6; text-transform: uppercase; letter-spacing: .4px; display: block; }
+.fs-bal-item .val { font-size: 20px; font-weight: 800; line-height: 1.1; }
+.fs-bal-item .val.red { color: #FF8585; }
+.fs-bal-item .val.green { color: #7FEFB0; }
+.fs-content { padding: 14px; }
+.fs-mov-item {
+  background: var(--surface); border-radius: var(--r-sm); padding: 13px 14px;
+  margin-bottom: 8px; display: flex; align-items: center; gap: 12px;
+}
+.fs-footer {
+  padding: 12px 16px calc(12px + var(--safe-bottom));
+  background: var(--surface); border-top: 1px solid var(--border);
+  display: flex; gap: 10px; flex-shrink: 0;
+}
+.fs-footer .btn { flex: 1; height: 48px; border-radius: var(--r-sm); font-size: 13px; font-weight: 700; font-family: inherit; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 7px; }
+.fs-footer .btn.primary { background: var(--accent); color: #fff; }
+.fs-footer .btn.success { background: var(--success); color: #fff; }
+.fs-footer .btn.pdf { background: var(--primary); color: #fff; }
 
-  /* ── FORM ── */
-  .form-group { margin-bottom: 18px; }
-  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  label { display: block; font-size: 13px; font-weight: 600; color: var(--primary); margin-bottom: 6px; }
-  input, select, textarea {
-    width: 100%; padding: 10px 14px; border-radius: var(--radius-sm);
-    border: 1.5px solid var(--border); font-family: inherit; font-size: 14px;
-    color: var(--text); background: var(--surface); outline: none; transition: border .2s;
-  }
-  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
-  textarea { resize: vertical; min-height: 80px; }
-  .form-hint { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+/* ── FORMS ── */
+.form-group { margin-bottom: 16px; }
+label { display: block; font-size: 13px; font-weight: 600; color: var(--primary); margin-bottom: 6px; }
+input, select, textarea {
+  width: 100%; padding: 13px 14px; border-radius: var(--r-sm);
+  border: 1.5px solid var(--border); font-family: inherit; font-size: 16px;
+  color: var(--text); background: var(--surface); outline: none;
+  transition: border .2s; -webkit-appearance: none; appearance: none;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+textarea { resize: none; min-height: 80px; font-size: 15px; }
+select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%236B7A90' d='M6 8L0 0h12z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+.form-hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
-  /* ── FILTER BAR ── */
-  .filter-bar {
-    background: var(--surface); border-radius: var(--radius); padding: 18px 20px;
-    box-shadow: var(--shadow); margin-bottom: 20px;
-    display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;
-  }
-  .filter-bar .form-group { margin-bottom: 0; flex: 1; min-width: 140px; }
+/* ── BUTTONS ── */
+.btn-full {
+  width: 100%; height: 52px; border-radius: var(--r-sm);
+  font-size: 15px; font-weight: 700; font-family: inherit; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-full.primary { background: var(--accent); color: #fff; }
+.btn-full.success { background: var(--success); color: #fff; }
+.btn-full.danger { background: var(--danger); color: #fff; }
+.btn-full.outline { background: transparent; border: 2px solid var(--accent); color: var(--accent); }
+.btn-full:active { opacity: .85; transform: scale(.98); }
+.btn-sm-row { display: flex; gap: 8px; }
+.btn-sm-row button {
+  flex: 1; height: 40px; border-radius: var(--r-sm); border: none; font-family: inherit;
+  font-size: 13px; font-weight: 600; cursor: pointer;
+}
 
-  /* ── SEARCH ── */
-  .search-box {
-    position: relative; flex: 1; max-width: 320px;
-  }
-  .search-box svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); width: 16px; }
-  .search-box input { padding-left: 38px; }
+/* ── SEARCH ── */
+.search-wrap { position: relative; margin-bottom: 14px; }
+.search-wrap svg { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--muted); width: 18px; height: 18px; }
+.search-wrap input { padding-left: 42px; font-size: 15px; }
 
-  /* ── TOAST ── */
-  .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 999; display: flex; flex-direction: column; gap: 8px; }
-  .toast {
-    background: var(--primary); color: #fff; padding: 13px 18px; border-radius: var(--radius-sm);
-    font-size: 13px; font-weight: 500; box-shadow: var(--shadow-lg);
-    animation: slideIn .3s; max-width: 320px;
-  }
-  .toast.success { background: var(--success); }
-  .toast.error { background: var(--danger); }
-  .toast.warning { background: var(--warning); }
-  @keyframes slideIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: none; } }
+/* ── FILTER CHIPS ── */
+.filter-chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 14px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.filter-chips::-webkit-scrollbar { display: none; }
+.chip {
+  padding: 7px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
+  white-space: nowrap; border: 1.5px solid var(--border); background: var(--surface);
+  color: var(--muted); cursor: pointer; flex-shrink: 0;
+}
+.chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
 
-  /* ── ALERT BOX ── */
-  .alert-box {
-    border-radius: var(--radius-sm); padding: 12px 16px; font-size: 13px;
-    display: flex; align-items: flex-start; gap: 10px; margin-bottom: 16px;
-  }
-  .alert-box.warning { background: #FEF9E7; color: #935116; border: 1px solid #F9A825; }
-  .alert-box.danger { background: #FDEDEC; color: #922B21; border: 1px solid var(--danger); }
-  .alert-box.info { background: var(--accent-light); color: #1A5276; border: 1px solid #AED6F1; }
-  .alert-box svg { width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; }
+/* ── TOAST ── */
+.toast-wrap { position: fixed; top: calc(var(--top-h) + env(safe-area-inset-top,0px) + 8px); left: 14px; right: 14px; z-index: 999; display: flex; flex-direction: column; gap: 7px; pointer-events: none; }
+.toast {
+  background: var(--primary); color: #fff; padding: 13px 16px;
+  border-radius: var(--r-sm); font-size: 14px; font-weight: 500;
+  box-shadow: var(--shadow-lg); animation: toastIn .25s ease;
+  display: flex; align-items: center; gap: 10px;
+}
+.toast.success { background: var(--success); }
+.toast.error { background: var(--danger); }
+.toast.warning { background: var(--warning); }
+@keyframes toastIn { from { opacity:0; transform: translateY(-12px); } to { opacity:1; transform:none; } }
 
-  /* ── TABS ── */
-  .tabs { display: flex; gap: 4px; border-bottom: 2px solid var(--border); margin-bottom: 22px; }
-  .tab-btn {
-    padding: 10px 18px; font-size: 13px; font-weight: 600; cursor: pointer;
-    border: none; background: none; color: var(--text-muted); border-bottom: 2px solid transparent;
-    margin-bottom: -2px; transition: all .2s; font-family: inherit;
-  }
-  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
-  .tab-content { display: none; }
-  .tab-content.active { display: block; }
+/* ── EMPTY STATE ── */
+.empty { text-align: center; padding: 50px 20px; color: var(--muted); }
+.empty svg { width: 52px; height: 52px; color: var(--border); margin: 0 auto 14px; display: block; }
+.empty h3 { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+.empty p { font-size: 13px; }
 
-  /* ── LOADING ── */
-  .spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; margin: 40px auto; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .loading-text { text-align: center; color: var(--text-muted); font-size: 14px; padding: 20px; }
+/* ── INFO BOX ── */
+.info-box {
+  border-radius: var(--r-sm); padding: 13px 15px; font-size: 13px;
+  display: flex; gap: 10px; margin-bottom: 14px; line-height: 1.5;
+}
+.info-box svg { width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px; }
+.info-box.info { background: var(--accent-light); color: #1A5276; border: 1px solid #AED6F1; }
+.info-box.warning { background: #FEF9E7; color: #935116; border: 1px solid #F9A825; }
+.info-box.danger { background: #FDEDEC; color: #922B21; border: 1px solid var(--danger); }
 
-  /* ── EMPTY STATE ── */
-  .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
-  .empty-state svg { width: 56px; height: 56px; margin: 0 auto 16px; display: block; color: var(--border); }
-  .empty-state h3 { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
-  .empty-state p { font-size: 13px; }
+/* ── SETTINGS PAGE ── */
+.settings-section { background: var(--surface); border-radius: var(--r); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 16px; }
+.settings-row {
+  display: flex; align-items: center; gap: 14px; padding: 16px;
+  border-bottom: 1px solid var(--border); cursor: pointer;
+}
+.settings-row:last-child { border-bottom: none; }
+.settings-icon {
+  width: 40px; height: 40px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 18px;
+}
+.settings-label { flex: 1; }
+.settings-label strong { display: block; font-size: 14px; font-weight: 600; }
+.settings-label span { font-size: 12px; color: var(--muted); }
+.settings-arrow { color: var(--muted); }
 
-  /* ── CUENTA CORRIENTE DETAIL ── */
-  .cc-header {
-    background: linear-gradient(135deg, var(--primary), #2E5A8E);
-    border-radius: var(--radius); padding: 24px; color: #fff; margin-bottom: 20px;
-  }
-  .cc-name { font-size: 22px; font-weight: 800; }
-  .cc-address { font-size: 13px; opacity: .7; margin-top: 4px; }
-  .cc-balance-row { display: flex; gap: 32px; margin-top: 20px; flex-wrap: wrap; }
-  .cc-balance-item label { font-size: 11px; opacity: .6; text-transform: uppercase; letter-spacing: .5px; }
-  .cc-balance-item .val { font-size: 26px; font-weight: 800; line-height: 1.1; }
-  .cc-balance-item .val.red { color: #FF8080; }
-  .cc-balance-item .val.green { color: #7FEFB0; }
+/* ── GAS GUIDE ── */
+.step-row { display: flex; gap: 14px; margin-bottom: 20px; }
+.step-num {
+  width: 30px; height: 30px; border-radius: 50%; background: var(--accent); color: #fff;
+  display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; flex-shrink: 0;
+}
+.step-body { flex: 1; }
+.step-body strong { display: block; font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+.step-body p { font-size: 13px; color: var(--muted); line-height: 1.5; }
+.code-block {
+  background: #1B3A5C; color: #A8D8EA; padding: 12px 14px;
+  border-radius: var(--r-sm); font-size: 11px; line-height: 1.7;
+  overflow-x: auto; margin-top: 8px; white-space: pre-wrap;
+  -webkit-overflow-scrolling: touch;
+}
+.copy-btn {
+  width: 100%; height: 44px; background: var(--primary); color: #fff;
+  border: none; border-radius: var(--r-sm); font-size: 14px; font-weight: 600;
+  font-family: inherit; cursor: pointer; margin-top: 8px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
 
-  /* ── RESPONSIVE ── */
-  @media (max-width: 768px) {
-    .sidebar { transform: translateX(-260px); }
-    .sidebar.open { transform: translateX(0); }
-    .main { margin-left: 0; }
-    .content { padding: 16px; }
-    .form-row { grid-template-columns: 1fr; }
-    .stats-grid { grid-template-columns: 1fr 1fr; }
-    .clients-grid { grid-template-columns: 1fr; }
-  }
+/* ── FILTER PANEL ── */
+.filter-panel { background: var(--surface); border-radius: var(--r); padding: 16px; box-shadow: var(--shadow); margin-bottom: 14px; }
+
+/* ── PULSE ANIMATION ── */
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.5; } }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 </style>
 </head>
 <body>
 
-<div class="app">
-<!-- ═══ SIDEBAR ═══ -->
-<aside class="sidebar" id="sidebar">
-  <div class="sidebar-logo">
-    <h1>Gestión<span>Pro</span></h1>
-    <p>Administrador de Clientes</p>
-  </div>
-  <nav class="nav">
-    <button class="nav-item active" onclick="showPage('dashboard')">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-      Dashboard
-    </button>
-    <button class="nav-item" onclick="showPage('clientes')">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-      Clientes
-    </button>
-    <button class="nav-item" onclick="showPage('movimientos')">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-      Movimientos
-    </button>
-    <button class="nav-item" onclick="showPage('alertas')">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-      Alertas de Deuda
-    </button>
-  </nav>
-  <div class="sidebar-config">
-    <div style="font-weight:600;color:rgba(255,255,255,.6);margin-bottom:8px;">⚙️ Google Sheets ID</div>
-    <input type="text" id="sheetId" placeholder="Pegar ID del Spreadsheet" oninput="saveConfig()">
-    <div style="margin-top:8px;font-weight:600;color:rgba(255,255,255,.6);margin-bottom:8px;">API Key</div>
-    <input type="password" id="apiKey" placeholder="Google Sheets API Key" oninput="saveConfig()">
-    <div style="margin-top:10px;">
-      <button class="btn btn-outline btn-sm" style="color:#fff;border-color:rgba(255,255,255,.3);width:100%;" onclick="testConnection()">🔗 Probar Conexión</button>
-    </div>
-  </div>
-</aside>
+<!-- ── TOPBAR ── -->
+<header class="topbar">
+  <span class="topbar-logo">Gestión<span>Pro-MAC</span>--FERNANDO TARCHINI--</span>
+  <button class="topbar-btn" onclick="syncData()" id="syncBtn" title="Sincronizar">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+  </button>
+  <button class="topbar-btn accent" onclick="openAddMovDrawer()" title="Nuevo movimiento">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+  </button>
+</header>
 
-<!-- ═══ MAIN ═══ -->
-<main class="main" id="main">
-  <header class="topbar">
-    <button class="topbar-toggle" onclick="toggleSidebar()">
-      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-    </button>
-    <span class="topbar-title" id="pageTitle">Dashboard</span>
-    <div class="topbar-actions">
-      <button class="btn btn-primary btn-sm" onclick="syncData()">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-        Sincronizar
-      </button>
-      <button class="btn btn-success btn-sm" onclick="openModal('modalCliente')">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-        Nuevo Cliente
-      </button>
-    </div>
-  </header>
+<!-- ── MAIN CONTENT ── -->
+<main class="main">
 
-  <div class="content">
-
-    <!-- ═══ DASHBOARD ═══ -->
-    <div class="page active" id="page-dashboard">
-      <div class="stats-grid" id="statsGrid"></div>
-
-      <div class="section-header">
-        <span class="section-title">⚠️ Clientes con Deuda Vencida</span>
-        <button class="btn btn-outline btn-sm" onclick="showPage('alertas')">Ver todas</button>
+  <!-- DASHBOARD -->
+  <div class="page active" id="page-dashboard">
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Clientes activos</div>
+        <div class="stat-value" id="st-clients">0</div>
       </div>
-      <div id="dashboardAlerts"></div>
-
-      <div class="section-header" style="margin-top:24px;">
-        <span class="section-title">📋 Últimos Movimientos</span>
-        <button class="btn btn-outline btn-sm" onclick="showPage('movimientos')">Ver todos</button>
+      <div class="stat-card">
+        <div class="stat-label">Deuda total</div>
+        <div class="stat-value red" id="st-debt" style="font-size:18px;">$0</div>
       </div>
-      <div class="table-wrap" id="dashboardMovs"></div>
-    </div>
-
-    <!-- ═══ CLIENTES ═══ -->
-    <div class="page" id="page-clientes">
-      <div class="section-header">
-        <div class="search-box">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/></svg>
-          <input type="text" placeholder="Buscar cliente..." oninput="filterClients(this.value)" id="clientSearch">
-        </div>
-        <div style="display:flex;gap:8px;">
-          <select onchange="filterClientsByStatus(this.value)" style="padding:8px 12px;font-size:13px;">
-            <option value="">Todos los estados</option>
-            <option value="ok">Al día</option>
-            <option value="warning">En riesgo</option>
-            <option value="danger">Vencido</option>
-          </select>
-          <button class="btn btn-primary btn-sm" onclick="openModal('modalCliente')">+ Nuevo</button>
+      <div class="stat-card">
+        <div class="stat-label">En riesgo</div>
+        <div class="stat-icon-row">
+          <div class="stat-dot orange"></div>
+          <div class="stat-value orange" id="st-risk">0</div>
         </div>
       </div>
-      <div class="clients-grid" id="clientsGrid"></div>
+      <div class="stat-card">
+        <div class="stat-label">Vencidos</div>
+        <div class="stat-icon-row">
+          <div class="stat-dot red"></div>
+          <div class="stat-value red" id="st-overdue">0</div>
+        </div>
+      </div>
     </div>
 
-    <!-- ═══ MOVIMIENTOS ═══ -->
-    <div class="page" id="page-movimientos">
-      <div class="filter-bar">
-        <div class="form-group" style="min-width:200px;">
-          <label>Cliente</label>
-          <select id="filterCliente">
+    <div class="sec-hdr">
+      <span class="sec-title">⚠️ Alertas de deuda</span>
+      <button class="sec-link" onclick="showPage('alertas')">Ver todas</button>
+    </div>
+    <div id="dash-alerts"></div>
+
+    <div class="sec-hdr">
+      <span class="sec-title">📋 Últimos movimientos</span>
+      <button class="sec-link" onclick="showPage('movimientos')">Ver todos</button>
+    </div>
+    <div id="dash-movs"></div>
+  </div>
+
+  <!-- CLIENTES -->
+  <div class="page" id="page-clientes">
+    <div class="search-wrap">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/></svg>
+      <input type="search" placeholder="Buscar cliente..." oninput="filterClients(this.value)" id="clientSearch" autocomplete="off">
+    </div>
+    <div class="filter-chips" id="statusChips">
+      <div class="chip active" onclick="chipFilter(this,'')" >Todos</div>
+      <div class="chip" onclick="chipFilter(this,'ok')">✅ Al día</div>
+      <div class="chip" onclick="chipFilter(this,'warning')">⚠️ En riesgo</div>
+      <div class="chip" onclick="chipFilter(this,'danger')">🚨 Vencidos</div>
+    </div>
+    <div id="clients-list"></div>
+    <div style="height:10px;"></div>
+  </div>
+
+  <!-- MOVIMIENTOS -->
+  <div class="page" id="page-movimientos">
+    <div class="filter-panel">
+      <div class="form-row" style="margin-bottom:10px;">
+        <div class="form-group" style="margin:0;">
+          <label style="font-size:12px;">Desde</label>
+          <input type="date" id="filterDesde" onchange="applyFilters()" style="font-size:14px;padding:10px 12px;">
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label style="font-size:12px;">Hasta</label>
+          <input type="date" id="filterHasta" onchange="applyFilters()" style="font-size:14px;padding:10px 12px;">
+        </div>
+      </div>
+      <div class="form-row" style="margin-bottom:10px;">
+        <div class="form-group" style="margin:0;">
+          <select id="filterCliente" onchange="applyFilters()" style="font-size:14px;padding:10px 12px;">
             <option value="">Todos los clientes</option>
           </select>
         </div>
-        <div class="form-group">
-          <label>Desde</label>
-          <input type="date" id="filterDesde">
-        </div>
-        <div class="form-group">
-          <label>Hasta</label>
-          <input type="date" id="filterHasta">
-        </div>
-        <div class="form-group">
-          <label>Tipo</label>
-          <select id="filterTipo">
-            <option value="">Todos</option>
+        <div class="form-group" style="margin:0;">
+          <select id="filterTipo" onchange="applyFilters()" style="font-size:14px;padding:10px 12px;">
+            <option value="">Todos los tipos</option>
             <option value="Venta">Ventas</option>
             <option value="Pago">Pagos</option>
             <option value="Nota">Notas</option>
           </select>
         </div>
-        <div style="display:flex;gap:8px;align-self:flex-end;">
-          <button class="btn btn-primary" onclick="applyFilters()">Filtrar</button>
-          <button class="btn btn-outline" onclick="clearFilters()">Limpiar</button>
-          <button class="btn btn-success" onclick="exportFilteredPDF()">📄 PDF</button>
-        </div>
       </div>
-      <div class="table-wrap" id="movsTable"></div>
-    </div>
-
-    <!-- ═══ ALERTAS ═══ -->
-    <div class="page" id="page-alertas">
-      <div class="section-header" style="margin-bottom:20px;">
-        <span class="section-title">🚨 Centro de Alertas de Deuda</span>
-        <div style="display:flex;gap:10px;align-items:center;">
-          <label style="font-size:13px;color:var(--text-muted);">Días límite:</label>
-          <input type="number" id="debtDaysConfig" value="30" style="width:70px;" onchange="saveConfig();renderAlerts()">
-          <button class="btn btn-warning btn-sm" onclick="sendAlerts()">📢 Enviar Alertas</button>
-        </div>
+      <div class="btn-sm-row">
+        <button style="background:var(--bg);color:var(--muted);" onclick="clearFilters()">Limpiar</button>
+        <button style="background:var(--primary);color:#fff;" onclick="exportFilteredPDF()">📄 Exportar PDF</button>
       </div>
-      <div id="alertsContainer"></div>
     </div>
+    <div id="movs-list"></div>
+    <div style="height:10px;"></div>
+  </div>
 
-  </div><!-- /content -->
+  <!-- ALERTAS -->
+  <div class="page" id="page-alertas">
+    <div class="filter-panel" style="display:flex;align-items:center;gap:12px;">
+      <div style="flex:1;">
+        <label style="font-size:12px;margin-bottom:4px;display:block;">Días límite de crédito</label>
+        <input type="number" id="debtDaysConfig" value="30" style="padding:10px 12px;font-size:15px;" onchange="saveConfig();renderAlerts()">
+      </div>
+      <button style="background:var(--warning);color:#fff;border:none;border-radius:var(--r-sm);height:46px;padding:0 16px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;flex-shrink:0;margin-top:18px;" onclick="sendAlerts()">📢 Alertar</button>
+    </div>
+    <div id="alerts-list"></div>
+  </div>
+
+  <!-- AJUSTES -->
+  <div class="page" id="page-ajustes">
+    <div class="settings-section">
+      <div class="settings-row" onclick="openGasDrawer()">
+        <div class="settings-icon" style="background:#EBF5FB;">🔗</div>
+        <div class="settings-label">
+          <strong>Conexión Google Sheets</strong>
+          <span id="connStatusText">Sin configurar</span>
+        </div>
+        <svg class="settings-arrow" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+      </div>
+      <div class="settings-row" onclick="showGasGuide()">
+        <div class="settings-icon" style="background:#EAFAF1;">📋</div>
+        <div class="settings-label">
+          <strong>Guía de configuración</strong>
+          <span>Paso a paso para conectar Sheets</span>
+        </div>
+        <svg class="settings-arrow" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+      </div>
+      <div class="settings-row" onclick="openAddClientDrawer()">
+        <div class="settings-icon" style="background:#F5EEF8;">👤</div>
+        <div class="settings-label">
+          <strong>Nuevo cliente</strong>
+          <span>Agregar cliente a la cartera</span>
+        </div>
+        <svg class="settings-arrow" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+      </div>
+      <div class="settings-row" onclick="clearAll()">
+        <div class="settings-icon" style="background:#FDEDEC;">🗑</div>
+        <div class="settings-label">
+          <strong>Limpiar datos locales</strong>
+          <span>Borra la caché del dispositivo</span>
+        </div>
+        <svg class="settings-arrow" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+      </div>
+    </div>
+    <div class="info-box info">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <span>Los datos se guardan localmente en tu dispositivo. Configurá Google Sheets para tenerlos en la nube y sincronizar entre dispositivos.</span>
+    </div>
+    <div style="text-align:center;font-size:12px;color:var(--muted);margin-top:20px;">GestiónPro v2.0 · Sin API Key</div>
+  </div>
+
 </main>
-</div>
 
-<!-- ═══════════ MODALES ═══════════ -->
-
-<!-- MODAL: Nuevo / Editar Cliente -->
-<div class="overlay" id="modalCliente">
-  <div class="modal">
-    <div class="modal-header">
-      <span class="modal-title" id="modalClienteTitle">Nuevo Cliente</span>
-      <button class="modal-close" onclick="closeModal('modalCliente')">
-        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-      </button>
+<!-- ── BOTTOM NAV ── -->
+<nav class="bottom-nav">
+  <button class="nav-tab active" id="tab-dashboard" onclick="showPage('dashboard')">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+    Inicio
+  </button>
+  <button class="nav-tab" id="tab-clientes" onclick="showPage('clientes')">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+    Clientes
+  </button>
+  <button class="nav-tab" id="tab-fab" onclick="openAddMovDrawer()" style="flex:0 0 auto;width:64px;">
+    <div class="nav-fab">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
     </div>
-    <div class="modal-body">
-      <input type="hidden" id="clientId">
+  </button>
+  <button class="nav-tab" id="tab-alertas" onclick="showPage('alertas')">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+    Alertas
+    <span class="badge" id="alertBadge" style="display:none;">0</span>
+  </button>
+  <button class="nav-tab" id="tab-ajustes" onclick="showPage('ajustes')">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+    Ajustes
+  </button>
+</nav>
+
+<!-- ═══════════ DRAWERS ═══════════ -->
+
+<!-- DRAWER: Nuevo Movimiento -->
+<div class="drawer-overlay" id="drawerMov" onclick="closeDrawerIfOverlay(event,'drawerMov')">
+  <div class="drawer">
+    <div class="drawer-handle"></div>
+    <div class="drawer-header">
+      <span class="drawer-title">Registrar Movimiento</span>
+      <button class="drawer-close" onclick="closeDrawer('drawerMov')">✕</button>
+    </div>
+    <div class="drawer-body">
+      <div class="form-group">
+        <label>Cliente</label>
+        <select id="movCliente"></select>
+      </div>
       <div class="form-row">
         <div class="form-group">
-          <label>Nombre / Razón Social *</label>
-          <input type="text" id="clientNombre" placeholder="Ej: Almacén López">
+          <label>Tipo</label>
+          <select id="movTipo">
+            <option value="Venta">💰 Venta</option>
+            <option value="Pago">✅ Pago</option>
+            <option value="Nota">📝 Nota crédito</option>
+          </select>
         </div>
         <div class="form-group">
-          <label>Teléfono</label>
-          <input type="text" id="clientTelefono" placeholder="+54 11 ...">
+          <label>Fecha</label>
+          <input type="date" id="movFecha">
         </div>
+      </div>
+      <div class="form-group">
+        <label>Monto ($)</label>
+        <input type="number" id="movMonto" placeholder="0.00" step="0.01" min="0" inputmode="decimal">
+      </div>
+      <div class="form-group">
+        <label>Descripción / Comprobante</label>
+        <input type="text" id="movDesc" placeholder="Nro. factura, detalle..." autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label>Notas</label>
+        <textarea id="movNotas" placeholder="Observaciones..."></textarea>
+      </div>
+    </div>
+    <div class="drawer-footer">
+      <button class="btn-full outline" onclick="closeDrawer('drawerMov')" style="flex:.4;">Cancelar</button>
+      <button class="btn-full success" onclick="saveMovimiento()" style="flex:.6;">✅ Registrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- DRAWER: Nuevo / Editar Cliente -->
+<div class="drawer-overlay" id="drawerCliente" onclick="closeDrawerIfOverlay(event,'drawerCliente')">
+  <div class="drawer">
+    <div class="drawer-handle"></div>
+    <div class="drawer-header">
+      <span class="drawer-title" id="drawerClienteTitle">Nuevo Cliente</span>
+      <button class="drawer-close" onclick="closeDrawer('drawerCliente')">✕</button>
+    </div>
+    <div class="drawer-body">
+      <input type="hidden" id="clientId">
+      <div class="form-group">
+        <label>Nombre / Razón Social *</label>
+        <input type="text" id="clientNombre" placeholder="Ej: Almacén López" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label>Teléfono</label>
+        <input type="tel" id="clientTelefono" placeholder="+54 11 ..." inputmode="tel">
       </div>
       <div class="form-group">
         <label>Dirección *</label>
-        <input type="text" id="clientDireccion" placeholder="Calle y número, ciudad">
+        <input type="text" id="clientDireccion" placeholder="Calle y número, ciudad" autocomplete="off">
       </div>
       <div class="form-group">
         <label>Email</label>
-        <input type="email" id="clientEmail" placeholder="cliente@email.com">
+        <input type="email" id="clientEmail" placeholder="cliente@email.com" inputmode="email">
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label>Días de Crédito</label>
-          <input type="number" id="clientDiasCredito" value="30" min="1">
+          <label>Días de crédito</label>
+          <input type="number" id="clientDiasCredito" value="30" min="1" inputmode="numeric">
         </div>
         <div class="form-group">
           <label>Estado</label>
@@ -493,892 +709,786 @@
       </div>
       <div class="form-group">
         <label>Notas</label>
-        <textarea id="clientNotas" placeholder="Observaciones sobre el cliente..."></textarea>
+        <textarea id="clientNotas" placeholder="Observaciones..."></textarea>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-outline" onclick="closeModal('modalCliente')">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveClient()">💾 Guardar Cliente</button>
+    <div class="drawer-footer">
+      <button class="btn-full outline" onclick="closeDrawer('drawerCliente')" style="flex:.4;">Cancelar</button>
+      <button class="btn-full primary" onclick="saveClient()" style="flex:.6;">💾 Guardar</button>
     </div>
   </div>
 </div>
 
-<!-- MODAL: Nuevo Movimiento -->
-<div class="overlay" id="modalMovimiento">
-  <div class="modal">
-    <div class="modal-header">
-      <span class="modal-title">Registrar Movimiento</span>
-      <button class="modal-close" onclick="closeModal('modalMovimiento')">
-        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-      </button>
+<!-- DRAWER: Configuración GAS -->
+<div class="drawer-overlay" id="drawerGas" onclick="closeDrawerIfOverlay(event,'drawerGas')">
+  <div class="drawer">
+    <div class="drawer-handle"></div>
+    <div class="drawer-header">
+      <span class="drawer-title">🔗 Conectar Google Sheets</span>
+      <button class="drawer-close" onclick="closeDrawer('drawerGas')">✕</button>
     </div>
-    <div class="modal-body">
-      <div class="form-group">
-        <label>Cliente *</label>
-        <select id="movCliente"></select>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Tipo *</label>
-          <select id="movTipo" onchange="updateMovForm()">
-            <option value="Venta">💰 Venta</option>
-            <option value="Pago">✅ Pago</option>
-            <option value="Nota">📝 Nota de Crédito</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Fecha *</label>
-          <input type="date" id="movFecha">
-        </div>
-      </div>
-      <div class="form-group" id="movMontoGroup">
-        <label>Monto ($) *</label>
-        <input type="number" id="movMonto" placeholder="0.00" step="0.01" min="0">
+    <div class="drawer-body">
+      <div class="info-box info" style="margin-bottom:16px;">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span>No necesitás API Key. Solo la URL de tu Apps Script Web App.</span>
       </div>
       <div class="form-group">
-        <label>Descripción / Comprobante</label>
-        <input type="text" id="movDesc" placeholder="Nro. factura, detalle...">
+        <label>URL del Apps Script Web App</label>
+        <textarea id="gasUrl" placeholder="https://script.google.com/macros/s/AKfycbwOySsOdm6ak5_uL68bd0pjbrzV-aa2YXJmyz3-eXOaOeRxHnqjhDgJAn7tgUZhcanyAA/exec" style="min-height:70px;font-size:13px;" oninput="saveConfig()"></textarea>
+        <div class="form-hint">Copiá la URL que te da Google al publicar el Apps Script</div>
       </div>
-      <div class="form-group">
-        <label>Notas adicionales</label>
-        <textarea id="movNotas" placeholder="Observaciones..." style="min-height:60px;"></textarea>
-      </div>
+      <div id="connStatusBox" style="margin-bottom:16px;"></div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-outline" onclick="closeModal('modalMovimiento')">Cancelar</button>
-      <button class="btn btn-success" onclick="saveMovimiento()">✅ Registrar</button>
+    <div class="drawer-footer" style="flex-direction:column;gap:8px;">
+      <button class="btn-full primary" onclick="testConnection()">🔗 Probar conexión</button>
+      <button class="btn-full outline" onclick="closeDrawer('drawerGas');showGasGuide()">📋 Ver guía paso a paso</button>
     </div>
   </div>
 </div>
 
-<!-- MODAL: Cuenta Corriente Cliente -->
-<div class="overlay" id="modalCC">
-  <div class="modal modal-lg">
-    <div class="modal-header">
-      <span class="modal-title">Cuenta Corriente</span>
-      <button class="modal-close" onclick="closeModal('modalCC')">
-        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-      </button>
+<!-- FULLSCREEN: Cuenta Corriente -->
+<div class="fullscreen" id="fsCC">
+  <div class="fs-topbar">
+    <button class="fs-back" onclick="closeFS('fsCC')">
+      <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+    </button>
+    <span class="fs-title" id="fsCCTitle">Cuenta Corriente</span>
+    <button class="topbar-btn" onclick="exportClientPDF()" style="background:rgba(255,255,255,.15);">
+      <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+    </button>
+  </div>
+  <div class="fs-body">
+    <div id="fsCCContent"></div>
+  </div>
+  <div class="fs-footer">
+    <button class="btn success" onclick="openMovForCC()">+ Movimiento</button>
+    <button class="btn pdf" onclick="exportClientPDF()">📄 PDF</button>
+  </div>
+</div>
+
+<!-- FULLSCREEN: Guía Apps Script -->
+<div class="fullscreen" id="fsGuide">
+  <div class="fs-topbar">
+    <button class="fs-back" onclick="closeFS('fsGuide')">
+      <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+    </button>
+    <span class="fs-title">📋 Guía de Configuración</span>
+  </div>
+  <div class="fs-body" style="padding:16px;">
+
+    <div class="step-row">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <strong>Preparar el Spreadsheet</strong>
+        <p>En tu Google Sheets creá dos hojas con estos nombres:</p>
+        <div class="code-block">Clientes
+Movimientos</div>
+        <p style="margin-top:8px;"><strong>Hoja Clientes</strong> — fila 1 con headers:</p>
+        <div class="code-block">id | nombre | telefono | direccion | email | diasCredito | estado | notas</div>
+        <p style="margin-top:8px;"><strong>Hoja Movimientos</strong> — fila 1 con headers:</p>
+        <div class="code-block">id | clientId | tipo | fecha | monto | desc | notas</div>
+      </div>
     </div>
-    <div class="modal-body" id="ccModalBody"></div>
-    <div class="modal-footer">
-      <button class="btn btn-outline" onclick="closeModal('modalCC')">Cerrar</button>
-      <button class="btn btn-success btn-sm" onclick="openMovFromCC()">+ Nuevo Movimiento</button>
-      <button class="btn btn-primary" onclick="exportClientPDF()">📄 Exportar PDF</button>
+
+    <div class="step-row">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <strong>Abrir Apps Script</strong>
+        <p>En tu Spreadsheet: <strong>Extensiones → Apps Script</strong><br>Borrá todo y pegá este código:</p>
+        <div class="code-block" id="gasCodeBlock">function doGet(e) {
+  var action = e.parameter.action;
+  if (action === 'ping') {
+    return resp({ok: true});
+  }
+  if (action === 'read') {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var c = ss.getSheetByName('Clientes').getDataRange().getValues().slice(1);
+    var m = ss.getSheetByName('Movimientos').getDataRange().getValues().slice(1);
+    return resp({ok: true, clients: c, movements: m});
+  }
+  return resp({ok: false});
+}
+
+function doPost(e) {
+  var data = JSON.parse(e.postData.contents);
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(data.sheet);
+  var rows = sheet.getDataRange().getValues();
+  var rowId = data.row[0];
+  for (var i = 1; i &lt; rows.length; i++) {
+    if (rows[i][0] == rowId) {
+      sheet.getRange(i+1,1,1,data.row.length).setValues([data.row]);
+      return resp({ok: true, action: 'updated'});
+    }
+  }
+  sheet.appendRow(data.row);
+  return resp({ok: true, action: 'inserted'});
+}
+
+function resp(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}</div>
+        <button class="copy-btn" onclick="copyGasCode()">📋 Copiar código</button>
+      </div>
     </div>
+
+    <div class="step-row">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <strong>Publicar como Web App</strong>
+        <p>En Apps Script: <strong>Implementar → Nueva implementación</strong><br>
+        • Tipo: <strong>Aplicación web</strong><br>
+        • Ejecutar como: <strong>Yo</strong><br>
+        • Acceso: <strong>Cualquier persona</strong><br>
+        → Copiá la URL generada</p>
+      </div>
+    </div>
+
+    <div class="step-row">
+      <div class="step-num" style="background:var(--success);">✓</div>
+      <div class="step-body">
+        <strong>Pegar URL en la app</strong>
+        <p>En <strong>Ajustes → Conexión Google Sheets</strong> pegá la URL y presioná "Probar conexión".</p>
+      </div>
+    </div>
+
+    <div class="info-box warning">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+      <span>Cada vez que modifiques el código de Apps Script, hacé una <strong>nueva implementación</strong> (no actualizar la existente).</span>
+    </div>
+
+    <div style="height:20px;"></div>
   </div>
 </div>
 
 <!-- TOAST CONTAINER -->
-<div class="toast-container" id="toastContainer"></div>
+<div class="toast-wrap" id="toastWrap"></div>
 
 <script>
 // ═══════════════════════════════════════════════════
-//   CONFIGURACIÓN Y ESTADO GLOBAL
+//  ESTADO GLOBAL
 // ═══════════════════════════════════════════════════
-let CONFIG = {
-  sheetId: '1KsadxFV6TQA1E0RltobrAMfoy5PKcUN9MKh3wLsk-UY',
-  apiKey: '',
-  debtDays: 30,
-  gasUrl: 'https://script.google.com/macros/s/AKfycbyhH3wTU3YjARKk7Jdrf_ZgzLgcshdUYPLK42gSzlp-SEX48HTNtjTQmDGovsvt2_wM/exec'
-};
-
-let DB = {
-  clients: [],
-  movements: []
-};
-
+let CONFIG = { gasUrl: '', debtDays: 30 };
+let DB = { clients: [], movements: [] };
 let currentClientId = null;
+let activeStatusFilter = '';
 
-// ── Inicialización
+// ── Init
 window.onload = () => {
   loadConfig();
-  loadLocalData();
-  renderDashboard();
   setDefaultDates();
+  renderDashboard();
+  updateBadges();
 };
 
 function setDefaultDates() {
   const today = new Date().toISOString().split('T')[0];
-  const monthAgo = new Date(Date.now() - 30*24*60*60*1000).toISOString().split('T')[0];
+  const ago30 = new Date(Date.now()-30*864e5).toISOString().split('T')[0];
   document.getElementById('movFecha').value = today;
+  document.getElementById('filterDesde').value = ago30;
   document.getElementById('filterHasta').value = today;
-  document.getElementById('filterDesde').value = monthAgo;
 }
 
-// ── Config persistence
+// ── Config
 function saveConfig() {
-  CONFIG.sheetId = document.getElementById('sheetId').value;
-  CONFIG.apiKey = document.getElementById('apiKey').value;
-  CONFIG.debtDays = parseInt(document.getElementById('debtDaysConfig').value) || 30;
+  const el = document.getElementById('gasUrl');
+  if(el) CONFIG.gasUrl = el.value.trim();
+  CONFIG.debtDays = parseInt(document.getElementById('debtDaysConfig')?.value)||30;
   localStorage.setItem('gp_config', JSON.stringify(CONFIG));
+  updateConnStatusUI();
 }
-
 function loadConfig() {
-  const saved = localStorage.getItem('gp_config');
-  if (saved) {
-    CONFIG = { ...CONFIG, ...JSON.parse(saved) };
-    document.getElementById('sheetId').value = CONFIG.sheetId || '';
-    document.getElementById('apiKey').value = CONFIG.apiKey || '';
-    document.getElementById('debtDaysConfig').value = CONFIG.debtDays || 30;
-  }
+  const s = localStorage.getItem('gp_config');
+  if(s) CONFIG = {...CONFIG,...JSON.parse(s)};
+  const el = document.getElementById('gasUrl');
+  if(el) el.value = CONFIG.gasUrl||'';
+  const dd = document.getElementById('debtDaysConfig');
+  if(dd) dd.value = CONFIG.debtDays||30;
+  updateConnStatusUI();
 }
-
-// ── Local data persistence (offline fallback)
-function saveLocalData() {
-  localStorage.setItem('gp_clients', JSON.stringify(DB.clients));
-  localStorage.setItem('gp_movements', JSON.stringify(DB.movements));
-}
-
-function loadLocalData() {
-  const c = localStorage.getItem('gp_clients');
-  const m = localStorage.getItem('gp_movements');
-  if (c) DB.clients = JSON.parse(c);
-  if (m) DB.movements = JSON.parse(m);
-  // Demo data if empty
-  if (!DB.clients.length) loadDemoData();
-}
-
-function loadDemoData() {
-  DB.clients = [
-    { id:'C001', nombre:'Almacén Don Pedro', telefono:'011-4521-3344', direccion:'Av. Corrientes 1234, CABA', email:'pedro@ejemplo.com', diasCredito:30, estado:'Activo', notas:'Paga los viernes.' },
-    { id:'C002', nombre:'Supermercado El Sol', telefono:'011-4712-5500', direccion:'Rivadavia 890, CABA', email:'elsol@mail.com', diasCredito:45, estado:'Activo', notas:'Pedir orden de compra.' },
-    { id:'C003', nombre:'Distribuidora Luna', telefono:'0220-432-1100', direccion:'San Martín 456, Merlo', email:'luna@dist.com', diasCredito:15, estado:'Activo', notas:'Sólo efectivo.' }
-  ];
-  const today = new Date();
-  const d = (days) => new Date(today - days*86400000).toISOString().split('T')[0];
-  DB.movements = [
-    { id:'M001', clientId:'C001', tipo:'Venta', fecha:d(40), monto:15000, desc:'Factura A-001', notas:'' },
-    { id:'M002', clientId:'C001', tipo:'Pago', fecha:d(35), monto:8000, desc:'Transferencia', notas:'' },
-    { id:'M003', clientId:'C001', tipo:'Venta', fecha:d(10), monto:22000, desc:'Factura A-002', notas:'Con descuento' },
-    { id:'M004', clientId:'C002', tipo:'Venta', fecha:d(50), monto:45000, desc:'Factura B-001', notas:'' },
-    { id:'M005', clientId:'C002', tipo:'Pago', fecha:d(45), monto:20000, desc:'Cheque', notas:'' },
-    { id:'M006', clientId:'C003', tipo:'Venta', fecha:d(5), monto:8500, desc:'Factura C-001', notas:'' },
-  ];
-  saveLocalData();
-}
-
-// ═══════════════════════════════════════════════════
-//   NAVEGACIÓN
-// ═══════════════════════════════════════════════════
-function showPage(name) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('page-' + name).classList.add('active');
-  const navBtns = document.querySelectorAll('.nav-item');
-  navBtns.forEach(btn => { if(btn.getAttribute('onclick')?.includes(name)) btn.classList.add('active'); });
-  const titles = { dashboard:'Dashboard', clientes:'Clientes', movimientos:'Movimientos', alertas:'Alertas de Deuda' };
-  document.getElementById('pageTitle').textContent = titles[name] || name;
-
-  if(name === 'dashboard') renderDashboard();
-  if(name === 'clientes') renderClients();
-  if(name === 'movimientos') renderMovimientos();
-  if(name === 'alertas') renderAlerts();
-}
-
-function toggleSidebar() {
-  const sb = document.getElementById('sidebar');
-  const mn = document.getElementById('main');
-  if(window.innerWidth <= 768) {
-    sb.classList.toggle('open');
+function updateConnStatusUI() {
+  const txt = document.getElementById('connStatusText');
+  const box = document.getElementById('connStatusBox');
+  if(CONFIG.gasUrl && CONFIG.gasUrl.includes('script.google.com')) {
+    if(txt) txt.textContent = '🟡 URL configurada';
+    if(box) box.innerHTML = '<div class="info-box info"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span>URL cargada. Presioná "Probar conexión" para verificar.</span></div>';
+  } else if(CONFIG.gasUrl) {
+    if(txt) txt.textContent = '🔴 URL inválida';
   } else {
-    sb.classList.toggle('collapsed');
-    mn.classList.toggle('full');
+    if(txt) txt.textContent = 'Sin configurar';
+    if(box) box.innerHTML = '';
   }
 }
 
-// ═══════════════════════════════════════════════════
-//   HELPERS
-// ═══════════════════════════════════════════════════
-function genId(prefix) {
-  return prefix + Date.now().toString(36).toUpperCase();
-}
-
-function fmt(n) {
-  return '$' + (parseFloat(n)||0).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
-}
-
-function fmtDate(d) {
-  if(!d) return '-';
-  const [y,m,day] = d.split('-');
-  return `${day}/${m}/${y}`;
-}
-
-function getClientBalance(clientId) {
-  return DB.movements
-    .filter(m => m.clientId === clientId)
-    .reduce((acc, m) => {
-      if(m.tipo === 'Venta') return acc + parseFloat(m.monto||0);
-      if(m.tipo === 'Pago' || m.tipo === 'Nota') return acc - parseFloat(m.monto||0);
-      return acc;
-    }, 0);
-}
-
-function getLastDebtDate(clientId) {
-  const ventas = DB.movements.filter(m => m.clientId === clientId && m.tipo === 'Venta');
-  if(!ventas.length) return null;
-  return ventas.sort((a,b) => b.fecha.localeCompare(a.fecha))[0].fecha;
-}
-
-function getDebtAge(clientId) {
-  const lastDate = getLastDebtDate(clientId);
-  if(!lastDate) return 0;
-  const balance = getClientBalance(clientId);
-  if(balance <= 0) return 0;
-  return Math.floor((Date.now() - new Date(lastDate)) / 86400000);
-}
-
-function getDebtStatus(clientId) {
-  const client = DB.clients.find(c => c.id === clientId);
-  const balance = getClientBalance(clientId);
-  if(balance <= 0) return 'ok';
-  const age = getDebtAge(clientId);
-  const limit = client?.diasCredito || CONFIG.debtDays;
-  if(age > limit) return 'danger';
-  if(age > limit * 0.7) return 'warning';
-  return 'ok';
-}
-
-function toast(msg, type='info') {
-  const tc = document.getElementById('toastContainer');
-  const t = document.createElement('div');
-  t.className = `toast ${type}`;
-  t.textContent = msg;
-  tc.appendChild(t);
-  setTimeout(() => t.remove(), 3500);
-}
-
-function openModal(id) { document.getElementById(id).classList.add('show'); }
-function closeModal(id) { document.getElementById(id).classList.remove('show'); }
 
 // ═══════════════════════════════════════════════════
-//   DASHBOARD
+//  HELPERS
 // ═══════════════════════════════════════════════════
-function renderDashboard() {
-  const totalClients = DB.clients.filter(c => c.estado === 'Activo').length;
-  const totalDebt = DB.clients.reduce((s,c) => s + Math.max(0, getClientBalance(c.id)), 0);
-  const inRisk = DB.clients.filter(c => getDebtStatus(c.id) === 'warning').length;
-  const overdue = DB.clients.filter(c => getDebtStatus(c.id) === 'danger').length;
+function genId(p){ return p+Date.now().toString(36).toUpperCase(); }
+function fmt(n){ return '$'+(parseFloat(n)||0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function fmtDate(d){ if(!d)return'-'; const[y,m,day]=d.split('-'); return`${day}/${m}/${y}`; }
 
-  document.getElementById('statsGrid').innerHTML = `
-    <div class="stat-card">
-      <div class="stat-icon blue"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg></div>
-      <div><div class="stat-label">Clientes Activos</div><div class="stat-value">${totalClients}</div></div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon red"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
-      <div><div class="stat-label">Deuda Total</div><div class="stat-value" style="font-size:18px;">${fmt(totalDebt)}</div></div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon orange"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg></div>
-      <div><div class="stat-label">En Riesgo</div><div class="stat-value" style="color:var(--warning);">${inRisk}</div><div class="stat-sub">clientes</div></div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon red"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg></div>
-      <div><div class="stat-label">Vencidos</div><div class="stat-value" style="color:var(--danger);">${overdue}</div><div class="stat-sub">clientes</div></div>
-    </div>
-  `;
+function getBalance(clientId){
+  return DB.movements.filter(m=>m.clientId===clientId).reduce((s,m)=>{
+    if(m.tipo==='Venta') return s+parseFloat(m.monto||0);
+    return s-parseFloat(m.monto||0);
+  },0);
+}
+function getDebtAge(clientId){
+  const bal=getBalance(clientId); if(bal<=0)return 0;
+  const ventas=DB.movements.filter(m=>m.clientId===clientId&&m.tipo==='Venta');
+  if(!ventas.length)return 0;
+  const last=ventas.sort((a,b)=>b.fecha.localeCompare(a.fecha))[0].fecha;
+  return Math.floor((Date.now()-new Date(last))/864e5);
+}
+function getStatus(clientId){
+  const c=DB.clients.find(x=>x.id===clientId);
+  const bal=getBalance(clientId); if(bal<=0)return'ok';
+  const age=getDebtAge(clientId);
+  const lim=c?.diasCredito||CONFIG.debtDays;
+  if(age>lim)return'danger';
+  if(age>lim*.7)return'warning';
+  return'ok';
+}
+function getClientName(id){ return DB.clients.find(c=>c.id===id)?.nombre||id; }
 
-  // Alerts in dash
-  const overdueClients = DB.clients.filter(c => getDebtStatus(c.id) !== 'ok');
-  const alertsEl = document.getElementById('dashboardAlerts');
-  if(!overdueClients.length) {
-    alertsEl.innerHTML = '<div class="alert-box info"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span>¡Todos los clientes están al día! 🎉</span></div>';
+function toast(msg,type='info'){
+  const wrap=document.getElementById('toastWrap');
+  const t=document.createElement('div');
+  t.className=`toast ${type}`;
+  const icons={success:'✅',error:'❌',warning:'⚠️',info:'ℹ️'};
+  t.innerHTML=`<span>${icons[type]||''}</span><span>${msg}</span>`;
+  wrap.appendChild(t);
+  setTimeout(()=>t.remove(),3500);
+}
+
+function updateBadges(){
+  const count=DB.clients.filter(c=>getStatus(c.id)!=='ok').length;
+  const badge=document.getElementById('alertBadge');
+  if(badge){ badge.style.display=count?'flex':'none'; badge.textContent=count; }
+}
+
+// ═══════════════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════════════
+function showPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  const tab=document.getElementById('tab-'+name);
+  if(tab) tab.classList.add('active');
+  if(name==='dashboard') renderDashboard();
+  if(name==='clientes'){ renderClients(); populateClientSelect(''); }
+  if(name==='movimientos'){ populateClientSelect(''); applyFilters(); }
+  if(name==='alertas') renderAlerts();
+  if(name==='ajustes') loadConfig();
+  window.scrollTo(0,0);
+}
+
+// ═══════════════════════════════════════════════════
+//  DRAWER / FULLSCREEN
+// ═══════════════════════════════════════════════════
+function openDrawer(id){ document.getElementById(id).classList.add('show'); document.body.style.overflow='hidden'; }
+function closeDrawer(id){ document.getElementById(id).classList.remove('show'); document.body.style.overflow=''; }
+function closeDrawerIfOverlay(e,id){ if(e.target===document.getElementById(id)) closeDrawer(id); }
+function openFS(id){ document.getElementById(id).classList.add('show'); document.body.style.overflow='hidden'; }
+function closeFS(id){ document.getElementById(id).classList.remove('show'); document.body.style.overflow=''; }
+
+function openAddMovDrawer(clientId){
+  populateClientSelect(clientId||'');
+  openDrawer('drawerMov');
+}
+function openAddClientDrawer(){
+  clearClientForm();
+  document.getElementById('drawerClienteTitle').textContent='Nuevo Cliente';
+  document.getElementById('clientId').value='';
+  openDrawer('drawerCliente');
+}
+function openGasDrawer(){ loadConfig(); openDrawer('drawerGas'); }
+function showGasGuide(){ openFS('fsGuide'); }
+
+// ═══════════════════════════════════════════════════
+//  DASHBOARD
+// ═══════════════════════════════════════════════════
+function renderDashboard(){
+  const active=DB.clients.filter(c=>c.estado==='Activo');
+  const totalDebt=active.reduce((s,c)=>s+Math.max(0,getBalance(c.id)),0);
+  const risk=active.filter(c=>getStatus(c.id)==='warning').length;
+  const over=active.filter(c=>getStatus(c.id)==='danger').length;
+
+  document.getElementById('st-clients').textContent=active.length;
+  document.getElementById('st-debt').textContent=fmt(totalDebt);
+  document.getElementById('st-risk').textContent=risk;
+  document.getElementById('st-overdue').textContent=over;
+
+  // Alerts preview
+  const alertEl=document.getElementById('dash-alerts');
+  const debtClients=DB.clients.filter(c=>getStatus(c.id)!=='ok');
+  if(!debtClients.length){
+    alertEl.innerHTML='<div class="info-box info"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span>¡Todos los clientes están al día! 🎉</span></div>';
   } else {
-    alertsEl.innerHTML = overdueClients.slice(0,3).map(c => {
-      const st = getDebtStatus(c.id);
-      const age = getDebtAge(c.id);
-      const bal = getClientBalance(c.id);
-      return `<div class="alert-box ${st}">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
-        <span><strong>${c.nombre}</strong> — Deuda: ${fmt(bal)} — ${age} días sin pago
-        <button class="btn btn-sm" style="margin-left:12px;padding:3px 10px;font-size:11px;background:rgba(0,0,0,.1);" onclick="openClientCC('${c.id}')">Ver cuenta</button></span>
-      </div>`;
-    }).join('');
+    alertEl.innerHTML=debtClients.slice(0,3).map(c=>alertCardHTML(c)).join('');
   }
 
-  // Last movements
-  const lastMovs = [...DB.movements].sort((a,b) => b.fecha.localeCompare(a.fecha)).slice(0,8);
-  document.getElementById('dashboardMovs').innerHTML = renderMovsTable(lastMovs);
+  // Last movs
+  const last=[...DB.movements].sort((a,b)=>b.fecha.localeCompare(a.fecha)).slice(0,6);
+  document.getElementById('dash-movs').innerHTML=last.length?last.map(m=>movItemHTML(m)).join(''):'<div class="empty"><p>Sin movimientos registrados</p></div>';
+
+  updateBadges();
 }
 
 // ═══════════════════════════════════════════════════
-//   CLIENTES
+//  CLIENTES
 // ═══════════════════════════════════════════════════
-function renderClients(list) {
-  const clients = list || DB.clients;
-  const grid = document.getElementById('clientsGrid');
-  if(!clients.length) {
-    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-      <h3>Sin clientes</h3><p>Agregá tu primer cliente con el botón "Nuevo"</p></div>`;
+function renderClients(list){
+  const clients=list||(activeStatusFilter?DB.clients.filter(c=>getStatus(c.id)===activeStatusFilter):DB.clients);
+  const el=document.getElementById('clients-list');
+  if(!clients.length){
+    el.innerHTML='<div class="empty"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg><h3>Sin clientes</h3><p>Agregá tu primer cliente desde Ajustes</p></div>';
     return;
   }
-  grid.innerHTML = clients.map(c => {
-    const bal = getClientBalance(c.id);
-    const st = getDebtStatus(c.id);
-    const age = getDebtAge(c.id);
-    const stLabel = { ok:'Al día', warning:'En riesgo', danger:'Vencido' }[st];
-    const movCount = DB.movements.filter(m => m.clientId === c.id).length;
-    return `<div class="client-card debt-${st}" onclick="openClientCC('${c.id}')">
-      <div class="client-card-header">
-        <div>
-          <div class="client-name">${c.nombre}</div>
-          <div class="client-address">📍 ${c.direccion}</div>
-        </div>
-        <span class="debt-badge ${st}">${stLabel}</span>
-      </div>
-      <div class="semaphore" style="margin-bottom:8px;">
-        <span class="sem-dot ${st!=='ok'?'active green':''} ${st==='ok'?'active green':''}"></span>
-        <span class="sem-dot ${st==='warning'||st==='danger'?'active yellow':''}"></span>
-        <span class="sem-dot ${st==='danger'?'active red':''}"></span>
-        <span style="font-size:11px;color:var(--text-muted);margin-left:6px;">${age > 0 ? age+' días' : 'Sin deuda'}</span>
-      </div>
-      <div class="client-balance ${bal>0?'positive':'zero'}">${fmt(bal)}</div>
-      <div class="client-meta">
-        <span>📞 ${c.telefono||'-'}</span>
-        <span>📋 ${movCount} mov.</span>
-        <span>⏱ ${c.diasCredito}d crédito</span>
-      </div>
-      <div class="client-actions" onclick="event.stopPropagation()">
-        <button class="btn btn-primary btn-sm" style="flex:1;" onclick="openClientCC('${c.id}')">📊 Cuenta</button>
-        <button class="btn btn-success btn-sm" style="flex:1;" onclick="openMovForClient('${c.id}')">+ Movimiento</button>
-        <button class="btn btn-outline btn-sm" onclick="editClient('${c.id}')">✏️</button>
-        <button class="btn btn-sm" style="background:#FDEDEC;color:var(--danger);" onclick="deleteClient('${c.id}')">🗑</button>
-      </div>
-    </div>`;
-  }).join('');
+  el.innerHTML=clients.map(c=>clientCardHTML(c)).join('');
 }
 
-function filterClients(q) {
-  const filtered = DB.clients.filter(c =>
-    c.nombre.toLowerCase().includes(q.toLowerCase()) ||
-    c.direccion.toLowerCase().includes(q.toLowerCase()) ||
-    (c.telefono||'').includes(q)
-  );
-  renderClients(filtered);
-}
-
-function filterClientsByStatus(st) {
-  const filtered = st ? DB.clients.filter(c => getDebtStatus(c.id) === st) : DB.clients;
-  renderClients(filtered);
-}
-
-function openClientCC(id) {
-  currentClientId = id;
-  const client = DB.clients.find(c => c.id === id);
-  if(!client) return;
-  const movs = DB.movements.filter(m => m.clientId === id).sort((a,b) => b.fecha.localeCompare(a.fecha));
-  const bal = getClientBalance(id);
-  const age = getDebtAge(id);
-  const st = getDebtStatus(id);
-
-  let running = 0;
-  const movsWithRunning = [...movs].reverse().map(m => {
-    if(m.tipo === 'Venta') running += parseFloat(m.monto||0);
-    else running -= parseFloat(m.monto||0);
-    return { ...m, running };
-  }).reverse();
-
-  const body = document.getElementById('ccModalBody');
-  body.innerHTML = `
-    <div class="cc-header">
-      <div class="cc-name">${client.nombre}</div>
-      <div class="cc-address">📍 ${client.direccion} · 📞 ${client.telefono||'-'}</div>
-      <div class="cc-balance-row">
-        <div class="cc-balance-item">
-          <label>Saldo Actual</label>
-          <div class="val ${bal>0?'red':'green'}">${fmt(bal)}</div>
-        </div>
-        <div class="cc-balance-item">
-          <label>Días de Deuda</label>
-          <div class="val">${age}</div>
-        </div>
-        <div class="cc-balance-item">
-          <label>Crédito</label>
-          <div class="val">${client.diasCredito}d</div>
-        </div>
-        <div class="cc-balance-item">
-          <label>Estado</label>
-          <div class="val ${st==='ok'?'green':st==='warning'?'':'red'}">${{ok:'✅ Al día',warning:'⚠️ Riesgo',danger:'🚨 Vencido'}[st]}</div>
-        </div>
+function clientCardHTML(c){
+  const bal=getBalance(c.id), st=getStatus(c.id), age=getDebtAge(c.id);
+  const labels={ok:'Al día',warning:'En riesgo',danger:'Vencido'};
+  return`<div class="client-card ${st}" onclick="openCC('${c.id}')">
+    <div class="cc-top">
+      <div><div class="cc-name">${c.nombre}</div><div class="cc-addr">📍 ${c.direccion}</div></div>
+      <span class="cc-badge ${st}">${labels[st]}</span>
+    </div>
+    <div class="cc-mid">
+      <div class="cc-balance ${bal>0?'debt':'paid'}">${fmt(bal)}</div>
+      <div class="semaphore">
+        <div class="sem-dot ${st==='ok'?'g':''}"></div>
+        <div class="sem-dot ${st==='warning'||st==='danger'?'y':''}"></div>
+        <div class="sem-dot ${st==='danger'?'r':''}"></div>
+        <span style="font-size:11px;color:var(--muted);margin-left:5px;">${age>0?age+'d':'-'}</span>
       </div>
     </div>
-    ${!movs.length ? '<div class="empty-state"><h3>Sin movimientos</h3><p>Registrá el primer movimiento con el botón de abajo.</p></div>' :
-    `<div class="table-wrap"><table>
-      <thead><tr><th>Fecha</th><th>Tipo</th><th>Descripción</th><th>Monto</th><th>Saldo</th><th></th></tr></thead>
-      <tbody>
-        ${movsWithRunning.map(m => `<tr>
-          <td>${fmtDate(m.fecha)}</td>
-          <td><span class="type-badge type-${m.tipo.toLowerCase()}">${m.tipo}</span></td>
-          <td>${m.desc||'-'}</td>
-          <td style="font-weight:600;color:${m.tipo==='Venta'?'var(--danger)':'var(--success)'};">${m.tipo==='Venta'?'+':'-'}${fmt(m.monto)}</td>
-          <td style="font-weight:700;">${fmt(m.running)}</td>
-          <td><button class="btn btn-sm" style="background:#FDEDEC;color:var(--danger);padding:4px 8px;" onclick="deleteMovimiento('${m.id}','${id}')">🗑</button></td>
-        </tr>`).join('')}
-      </tbody>
-    </table></div>`}
-  `;
-  openModal('modalCC');
+    <div class="cc-meta">
+      <span>📞 ${c.telefono||'-'}</span>
+      <span>⏱ ${c.diasCredito}d crédito</span>
+      <span>📋 ${DB.movements.filter(m=>m.clientId===c.id).length} mov.</span>
+    </div>
+    <div class="cc-actions" onclick="event.stopPropagation()">
+      <button class="btn-icon primary" onclick="openCC('${c.id}')">📊 Ver cuenta</button>
+      <button class="btn-icon success" onclick="openMovForClient('${c.id}')">+ Movimiento</button>
+    </div>
+  </div>`;
 }
 
-function openMovForClient(clientId) {
-  closeModal('modalCC');
-  populateClientSelect(clientId);
-  openModal('modalMovimiento');
+function filterClients(q){
+  const f=DB.clients.filter(c=>
+    c.nombre.toLowerCase().includes(q.toLowerCase())||
+    c.direccion.toLowerCase().includes(q.toLowerCase())||
+    (c.telefono||'').includes(q)
+  );
+  const filtered=activeStatusFilter?f.filter(c=>getStatus(c.id)===activeStatusFilter):f;
+  renderClients(filtered);
 }
 
-function openMovFromCC() {
-  openMovForClient(currentClientId);
+function chipFilter(el,status){
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  activeStatusFilter=status;
+  const q=document.getElementById('clientSearch').value;
+  q?filterClients(q):renderClients();
 }
 
-function editClient(id) {
-  const c = DB.clients.find(x => x.id === id);
-  if(!c) return;
-  document.getElementById('modalClienteTitle').textContent = 'Editar Cliente';
-  document.getElementById('clientId').value = c.id;
-  document.getElementById('clientNombre').value = c.nombre;
-  document.getElementById('clientTelefono').value = c.telefono||'';
-  document.getElementById('clientDireccion').value = c.direccion;
-  document.getElementById('clientEmail').value = c.email||'';
-  document.getElementById('clientDiasCredito').value = c.diasCredito||30;
-  document.getElementById('clientEstado').value = c.estado||'Activo';
-  document.getElementById('clientNotas').value = c.notas||'';
-  openModal('modalCliente');
+function populateClientSelect(selectedId){
+  ['movCliente','filterCliente'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    const placeholder=id==='filterCliente'?'<option value="">Todos los clientes</option>':'';
+    el.innerHTML=placeholder+DB.clients.map(c=>`<option value="${c.id}"${c.id===selectedId?' selected':''}>${c.nombre}</option>`).join('');
+  });
 }
 
-function saveClient() {
-  const nombre = document.getElementById('clientNombre').value.trim();
-  const dir = document.getElementById('clientDireccion').value.trim();
-  if(!nombre || !dir) { toast('Nombre y dirección son obligatorios', 'error'); return; }
+// ── Cuenta Corriente
+function openCC(id){
+  currentClientId=id;
+  const c=DB.clients.find(x=>x.id===id);
+  if(!c)return;
+  document.getElementById('fsCCTitle').textContent=c.nombre;
+  renderCCContent(id);
+  openFS('fsCC');
+}
 
-  const id = document.getElementById('clientId').value || genId('C');
-  const client = {
-    id, nombre,
-    telefono: document.getElementById('clientTelefono').value,
-    direccion: dir,
-    email: document.getElementById('clientEmail').value,
-    diasCredito: parseInt(document.getElementById('clientDiasCredito').value)||30,
-    estado: document.getElementById('clientEstado').value,
-    notas: document.getElementById('clientNotas').value
+function renderCCContent(id){
+  const c=DB.clients.find(x=>x.id===id);
+  const movs=[...DB.movements.filter(m=>m.clientId===id)].sort((a,b)=>a.fecha.localeCompare(b.fecha));
+  const bal=getBalance(id), age=getDebtAge(id), st=getStatus(id);
+  let running=0;
+  const movsR=movs.map(m=>{
+    if(m.tipo==='Venta')running+=parseFloat(m.monto||0);
+    else running-=parseFloat(m.monto||0);
+    return{...m,running};
+  }).reverse();
+
+  const stLabel={ok:'✅ Al día',warning:'⚠️ En riesgo',danger:'🚨 Vencido'}[st];
+  document.getElementById('fsCCContent').innerHTML=`
+    <div class="fs-header">
+      <div class="fs-client-name">${c.nombre}</div>
+      <div class="fs-client-sub">📍 ${c.direccion} · 📞 ${c.telefono||'-'}</div>
+      <div class="fs-balances">
+        <div class="fs-bal-item"><label>Saldo</label><div class="val ${bal>0?'red':'green'}">${fmt(bal)}</div></div>
+        <div class="fs-bal-item"><label>Días deuda</label><div class="val">${age}</div></div>
+        <div class="fs-bal-item"><label>Estado</label><div class="val" style="font-size:14px;">${stLabel}</div></div>
+      </div>
+    </div>
+    <div class="fs-content">
+      <div style="font-size:14px;font-weight:700;color:var(--primary);margin-bottom:12px;">Movimientos</div>
+      ${movsR.length?movsR.map(m=>`
+        <div class="fs-mov-item">
+          <div class="mov-icon ${m.tipo.toLowerCase()}">${m.tipo==='Venta'?'💰':m.tipo==='Pago'?'✅':'📝'}</div>
+          <div class="mov-body">
+            <div class="mov-name">${m.desc||m.tipo}</div>
+            <div class="mov-sub">${fmtDate(m.fecha)}</div>
+          </div>
+          <div>
+            <div class="mov-amount ${m.tipo==='Venta'?'plus':'minus'}">${m.tipo==='Venta'?'+':'-'}${fmt(m.monto)}</div>
+            <div style="font-size:11px;color:var(--muted);text-align:right;">Saldo: ${fmt(m.running)}</div>
+          </div>
+        </div>`).join(''):'<div class="empty"><p>Sin movimientos</p></div>'}
+    </div>`;
+}
+
+function openMovForCC(){
+  closeFS('fsCC');
+  setTimeout(()=>openAddMovDrawer(currentClientId),200);
+}
+
+function openMovForClient(id){
+  event.stopPropagation();
+  openAddMovDrawer(id);
+}
+
+// ── CRUD Clientes
+function saveClient(){
+  const nombre=document.getElementById('clientNombre').value.trim();
+  const dir=document.getElementById('clientDireccion').value.trim();
+  if(!nombre||!dir){toast('Nombre y dirección son obligatorios','error');return;}
+  const id=document.getElementById('clientId').value||genId('C');
+  const client={
+    id,nombre,
+    telefono:document.getElementById('clientTelefono').value,
+    direccion:dir,
+    email:document.getElementById('clientEmail').value,
+    diasCredito:parseInt(document.getElementById('clientDiasCredito').value)||30,
+    estado:document.getElementById('clientEstado').value,
+    notas:document.getElementById('clientNotas').value
   };
-
-  const idx = DB.clients.findIndex(c => c.id === id);
-  if(idx >= 0) DB.clients[idx] = client;
-  else DB.clients.push(client);
-
-  saveLocalData();
-  syncToSheet('Clientes', clientToRow(client));
-  closeModal('modalCliente');
-  toast('Cliente guardado ✅', 'success');
+  const idx=DB.clients.findIndex(c=>c.id===id);
+  if(idx>=0) DB.clients[idx]=client; else DB.clients.push(client);
+  syncToSheet('Clientes',[client.id,client.nombre,client.telefono,client.direccion,client.email,client.diasCredito,client.estado,client.notas]);
+  closeDrawer('drawerCliente');
+  toast('Cliente guardado ✅','success');
   renderClients();
-  document.getElementById('clientId').value = '';
-  document.getElementById('modalClienteTitle').textContent = 'Nuevo Cliente';
-  clearClientForm();
+  updateBadges();
 }
 
-function clearClientForm() {
-  ['clientNombre','clientTelefono','clientDireccion','clientEmail','clientNotas'].forEach(f => document.getElementById(f).value='');
-  document.getElementById('clientDiasCredito').value = 30;
-  document.getElementById('clientEstado').value = 'Activo';
+function editClient(id){
+  const c=DB.clients.find(x=>x.id===id);
+  if(!c)return;
+  document.getElementById('drawerClienteTitle').textContent='Editar Cliente';
+  document.getElementById('clientId').value=c.id;
+  document.getElementById('clientNombre').value=c.nombre;
+  document.getElementById('clientTelefono').value=c.telefono||'';
+  document.getElementById('clientDireccion').value=c.direccion;
+  document.getElementById('clientEmail').value=c.email||'';
+  document.getElementById('clientDiasCredito').value=c.diasCredito||30;
+  document.getElementById('clientEstado').value=c.estado||'Activo';
+  document.getElementById('clientNotas').value=c.notas||'';
+  openDrawer('drawerCliente');
 }
 
-function deleteClient(id) {
-  if(!confirm('¿Eliminar este cliente y todos sus movimientos?')) return;
-  DB.clients = DB.clients.filter(c => c.id !== id);
-  DB.movements = DB.movements.filter(m => m.clientId !== id);
-  saveLocalData();
-  toast('Cliente eliminado', 'warning');
-  renderClients();
+function deleteClient(id){
+  if(!confirm('¿Eliminar este cliente y sus movimientos?'))return;
+  DB.clients=DB.clients.filter(c=>c.id!==id);
+  DB.movements=DB.movements.filter(m=>m.clientId!==id);
+  toast('Cliente eliminado','warning');
+  renderClients(); updateBadges();
+}
+
+function clearClientForm(){
+  ['clientNombre','clientTelefono','clientDireccion','clientEmail','clientNotas'].forEach(f=>document.getElementById(f).value='');
+  document.getElementById('clientDiasCredito').value=30;
+  document.getElementById('clientEstado').value='Activo';
 }
 
 // ═══════════════════════════════════════════════════
-//   MOVIMIENTOS
+//  MOVIMIENTOS
 // ═══════════════════════════════════════════════════
-function populateClientSelect(selectedId) {
-  const sel = document.getElementById('movCliente');
-  sel.innerHTML = DB.clients.map(c => `<option value="${c.id}" ${c.id===selectedId?'selected':''}>${c.nombre}</option>`).join('');
-  // Also filter dropdown
-  const fsel = document.getElementById('filterCliente');
-  fsel.innerHTML = '<option value="">Todos los clientes</option>' + DB.clients.map(c => `<option value="${c.id}">${c.nombre}</option>`).join('');
-}
-
-function saveMovimiento() {
-  const clientId = document.getElementById('movCliente').value;
-  if(!clientId) { toast('Seleccioná un cliente', 'error'); return; }
-  const tipo = document.getElementById('movTipo').value;
-  const fecha = document.getElementById('movFecha').value;
-  const monto = parseFloat(document.getElementById('movMonto').value)||0;
-  const desc = document.getElementById('movDesc').value;
-  const notas = document.getElementById('movNotas').value;
-  if(!fecha) { toast('La fecha es obligatoria', 'error'); return; }
-  if(tipo !== 'Nota' && monto <= 0) { toast('Ingresá un monto válido', 'error'); return; }
-
-  const mov = { id: genId('M'), clientId, tipo, fecha, monto, desc, notas };
-  DB.movements.push(mov);
-  saveLocalData();
-  syncToSheet('Movimientos', movToRow(mov));
-  closeModal('modalMovimiento');
-  toast(`${tipo} registrada ✅`, 'success');
+function saveMovimiento(){
+  const clientId=document.getElementById('movCliente').value;
+  if(!clientId){toast('Seleccioná un cliente','error');return;}
+  const monto=parseFloat(document.getElementById('movMonto').value)||0;
+  const fecha=document.getElementById('movFecha').value;
+  if(!fecha){toast('La fecha es obligatoria','error');return;}
+  if(monto<=0){toast('Ingresá un monto válido','error');return;}
+  const mov={
+    id:genId('M'),clientId,
+    tipo:document.getElementById('movTipo').value,
+    fecha,monto,
+    desc:document.getElementById('movDesc').value,
+    notas:document.getElementById('movNotas').value
+  };
+  syncToSheet('Movimientos',[mov.id,mov.clientId,mov.tipo,mov.fecha,mov.monto,mov.desc,mov.notas]);
+  closeDrawer('drawerMov');
+  toast(`${mov.tipo} registrada ✅`,'success');
+  document.getElementById('movMonto').value='';
+  document.getElementById('movDesc').value='';
+  document.getElementById('movNotas').value='';
   renderDashboard();
-  document.getElementById('movMonto').value = '';
-  document.getElementById('movDesc').value = '';
-  document.getElementById('movNotas').value = '';
+  // Refresh CC if open
+  if(currentClientId===clientId && document.getElementById('fsCC').classList.contains('show')){
+    renderCCContent(clientId);
+  }
 }
 
-function deleteMovimiento(id, clientId) {
-  if(!confirm('¿Eliminar este movimiento?')) return;
-  DB.movements = DB.movements.filter(m => m.id !== id);
-  saveLocalData();
-  toast('Movimiento eliminado', 'warning');
-  openClientCC(clientId);
-}
-
-function renderMovimientos() {
-  populateClientSelect('');
-  applyFilters();
-}
-
-function applyFilters() {
-  const clientId = document.getElementById('filterCliente').value;
-  const desde = document.getElementById('filterDesde').value;
-  const hasta = document.getElementById('filterHasta').value;
-  const tipo = document.getElementById('filterTipo').value;
-
-  let filtered = DB.movements.filter(m => {
-    if(clientId && m.clientId !== clientId) return false;
-    if(desde && m.fecha < desde) return false;
-    if(hasta && m.fecha > hasta) return false;
-    if(tipo && m.tipo !== tipo) return false;
+function applyFilters(){
+  const clientId=document.getElementById('filterCliente').value;
+  const desde=document.getElementById('filterDesde').value;
+  const hasta=document.getElementById('filterHasta').value;
+  const tipo=document.getElementById('filterTipo').value;
+  let f=DB.movements.filter(m=>{
+    if(clientId&&m.clientId!==clientId)return false;
+    if(desde&&m.fecha<desde)return false;
+    if(hasta&&m.fecha>hasta)return false;
+    if(tipo&&m.tipo!==tipo)return false;
     return true;
-  }).sort((a,b) => b.fecha.localeCompare(a.fecha));
-
-  document.getElementById('movsTable').innerHTML = renderMovsTable(filtered);
+  }).sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  document.getElementById('movs-list').innerHTML=f.length?f.map(m=>movItemHTML(m)).join(''):'<div class="empty"><h3>Sin resultados</h3><p>Probá cambiando los filtros</p></div>';
 }
 
-function clearFilters() {
-  document.getElementById('filterCliente').value = '';
-  document.getElementById('filterTipo').value = '';
+function clearFilters(){
+  document.getElementById('filterCliente').value='';
+  document.getElementById('filterTipo').value='';
   setDefaultDates();
   applyFilters();
 }
 
-function renderMovsTable(movs) {
-  if(!movs.length) return `<div class="empty-state"><h3>Sin movimientos</h3><p>No hay movimientos para el filtro seleccionado.</p></div>`;
-  return `<table>
-    <thead><tr><th>Fecha</th><th>Cliente</th><th>Tipo</th><th>Descripción</th><th>Monto</th><th>Notas</th></tr></thead>
-    <tbody>
-      ${movs.map(m => {
-        const client = DB.clients.find(c => c.id === m.clientId);
-        return `<tr>
-          <td>${fmtDate(m.fecha)}</td>
-          <td style="font-weight:600;">${client?.nombre||m.clientId}</td>
-          <td><span class="type-badge type-${m.tipo.toLowerCase()}">${m.tipo}</span></td>
-          <td>${m.desc||'-'}</td>
-          <td style="font-weight:700;color:${m.tipo==='Venta'?'var(--danger)':'var(--success)'};">${m.tipo==='Venta'?'+':'-'}${fmt(m.monto)}</td>
-          <td style="font-size:12px;color:var(--text-muted);">${m.notas||''}</td>
-        </tr>`;
-      }).join('')}
-    </tbody>
-  </table>`;
+function movItemHTML(m){
+  const icons={Venta:'💰',Pago:'✅',Nota:'📝'};
+  const cname=getClientName(m.clientId);
+  return`<div class="mov-item">
+    <div class="mov-icon ${m.tipo.toLowerCase()}">${icons[m.tipo]||'📄'}</div>
+    <div class="mov-body">
+      <div class="mov-name">${cname}</div>
+      <div class="mov-sub">${fmtDate(m.fecha)}${m.desc?' · '+m.desc:''}</div>
+    </div>
+    <div class="mov-amount ${m.tipo==='Venta'?'plus':'minus'}">${m.tipo==='Venta'?'+':'-'}${fmt(m.monto)}</div>
+  </div>`;
 }
 
-
-
 // ═══════════════════════════════════════════════════
-//   ALERTAS
+//  ALERTAS
 // ═══════════════════════════════════════════════════
-function renderAlerts() {
-  const container = document.getElementById('alertsContainer');
-  const debtClients = DB.clients.filter(c => {
-    const bal = getClientBalance(c.id);
-    return bal > 0;
-  }).sort((a,b) => getDebtAge(b.id) - getDebtAge(a.id));
-
-  if(!debtClients.length) {
-    container.innerHTML = `<div class="empty-state">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-      <h3>¡Sin alertas!</h3><p>Todos tus clientes están al día.</p></div>`;
+function renderAlerts(){
+  const el=document.getElementById('alerts-list');
+  const debtClients=DB.clients.filter(c=>getBalance(c.id)>0).sort((a,b)=>getDebtAge(b.id)-getDebtAge(a.id));
+  if(!debtClients.length){
+    el.innerHTML='<div class="empty"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><h3>¡Sin alertas!</h3><p>Todos los clientes están al día.</p></div>';
     return;
   }
-
-  container.innerHTML = `<div class="table-wrap"><table>
-    <thead><tr><th>Cliente</th><th>Saldo Deudor</th><th>Días de Deuda</th><th>Límite Crédito</th><th>Estado</th><th>Acciones</th></tr></thead>
-    <tbody>
-      ${debtClients.map(c => {
-        const bal = getClientBalance(c.id);
-        const age = getDebtAge(c.id);
-        const st = getDebtStatus(c.id);
-        const stLabel = { ok:'✅ Al día', warning:'⚠️ En riesgo', danger:'🚨 Vencido' }[st];
-        const stColor = { ok:'var(--success)', warning:'var(--warning)', danger:'var(--danger)' }[st];
-        return `<tr>
-          <td style="font-weight:600;">${c.nombre}<div style="font-size:11px;color:var(--text-muted);">${c.telefono||''}</div></td>
-          <td style="font-weight:700;color:var(--danger);">${fmt(bal)}</td>
-          <td style="font-weight:600;${age>=(c.diasCredito||CONFIG.debtDays)?'color:var(--danger)':''}">${age} días</td>
-          <td>${c.diasCredito||CONFIG.debtDays} días</td>
-          <td><span style="font-weight:600;color:${stColor};">${stLabel}</span></td>
-          <td style="display:flex;gap:6px;">
-            <button class="btn btn-sm btn-primary" onclick="openClientCC('${c.id}')">Ver cuenta</button>
-            <button class="btn btn-sm btn-success" onclick="openMovForClient('${c.id}')">+ Pago</button>
-          </td>
-        </tr>`;
-      }).join('')}
-    </tbody>
-  </table></div>`;
+  el.innerHTML=debtClients.map(c=>alertCardHTML(c)).join('');
 }
 
-function sendAlerts() {
-  const overdue = DB.clients.filter(c => getDebtStatus(c.id) === 'danger');
-  if(!overdue.length) { toast('No hay clientes con deuda vencida', 'info'); return; }
-  toast(`Alertas enviadas a ${overdue.length} clientes (funcionalidad con Google Apps Script)`, 'warning');
+function alertCardHTML(c){
+  const bal=getBalance(c.id), age=getDebtAge(c.id), st=getStatus(c.id);
+  return`<div class="alert-card ${st}">
+    <div class="alert-top">
+      <div class="alert-name">${c.nombre}</div>
+      <div class="alert-days ${st}">${age} días</div>
+    </div>
+    <div style="font-size:12px;color:var(--muted);">${c.direccion}</div>
+    <div class="alert-amount">${fmt(bal)}</div>
+    <div class="alert-actions">
+      <button class="btn-cc" onclick="openCC('${c.id}')">📊 Ver cuenta</button>
+      <button class="btn-pay" onclick="openMovForClient('${c.id}')">+ Registrar pago</button>
+    </div>
+  </div>`;
+}
+
+function sendAlerts(){
+  const over=DB.clients.filter(c=>getStatus(c.id)==='danger');
+  toast(over.length?`Alertas registradas para ${over.length} clientes`:'No hay clientes con deuda vencida', over.length?'warning':'info');
 }
 
 // ═══════════════════════════════════════════════════
-//   EXPORT PDF
+//  GOOGLE SHEETS SYNC
 // ═══════════════════════════════════════════════════
-function exportClientPDF() {
-  const client = DB.clients.find(c => c.id === currentClientId);
-  if(!client) return;
-  const movs = DB.movements.filter(m => m.clientId === currentClientId).sort((a,b) => a.fecha.localeCompare(b.fecha));
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
+async function syncToSheet(sheetName, rowData){
+  if(!CONFIG.gasUrl)return;
+  try{
+    await fetch(CONFIG.gasUrl,{
+      method:'POST', mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'write',sheet:sheetName,row:rowData})
+    });
+  }catch(e){console.warn('GAS write failed:',e);}
+}
 
-  // Header
-  doc.setFillColor(27,58,92);
-  doc.rect(0,0,210,38,'F');
-  doc.setTextColor(255,255,255);
-  doc.setFontSize(18); doc.setFont('helvetica','bold');
-  doc.text('Cuenta Corriente', 14, 16);
-  doc.setFontSize(12); doc.setFont('helvetica','normal');
-  doc.text(client.nombre, 14, 24);
-  doc.setFontSize(9);
-  doc.text(`${client.direccion} · ${client.telefono||''}`, 14, 31);
-  doc.text(`Generado: ${new Date().toLocaleDateString('es-AR')}`, 160, 31);
-
-  // Balance summary
-  const bal = getClientBalance(client.id);
-  const age = getDebtAge(client.id);
-  doc.setTextColor(0,0,0);
-  doc.setFontSize(11); doc.setFont('helvetica','bold');
-  doc.text('Resumen', 14, 50);
-  doc.setFont('helvetica','normal'); doc.setFontSize(10);
-  doc.text(`Saldo actual: ${fmt(bal)}`, 14, 58);
-  doc.text(`Días de deuda: ${age}`, 80, 58);
-  doc.text(`Crédito: ${client.diasCredito} días`, 150, 58);
-
-  // Table
-  let running = 0;
-  const rows = movs.map(m => {
-    if(m.tipo==='Venta') running += parseFloat(m.monto||0);
-    else running -= parseFloat(m.monto||0);
-    return [fmtDate(m.fecha), m.tipo, m.desc||'-', m.tipo==='Venta'?'+'+fmt(m.monto):'-'+fmt(m.monto), fmt(running)];
-  });
-
-  doc.autoTable({
-    startY: 65,
-    head: [['Fecha','Tipo','Descripción','Monto','Saldo']],
-    body: rows,
-    headStyles: { fillColor: [46,139,192], textColor: 255, fontStyle:'bold' },
-    alternateRowStyles: { fillColor: [235,245,251] },
-    styles: { fontSize: 9 }
-  });
-
-  // Footer
-  const pCount = doc.internal.getNumberOfPages();
-  for(let i=1;i<=pCount;i++) {
-    doc.setPage(i);
-    doc.setFontSize(8); doc.setTextColor(150);
-    doc.text(`GestiónPro · Pág ${i}/${pCount}`, 14, 290);
-    doc.text(`Saldo final: ${fmt(bal)}`, 160, 290);
+async function syncData(){
+  if(!CONFIG.gasUrl){toast('Configurá la URL de Apps Script en Ajustes','warning');return;}
+  const btn=document.getElementById('syncBtn');
+  btn.style.animation='spin .6s linear infinite';
+  toast('Sincronizando...','info');
+  try{
+    const res=await fetch(CONFIG.gasUrl+'?action=read');
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    const data=await res.json();
+    if(data.clients?.length){
+      DB.clients=data.clients.map(r=>({
+        id:r[0],nombre:r[1],telefono:r[2]||'',direccion:r[3],email:r[4]||'',
+        diasCredito:parseInt(r[5])||30,estado:r[6]||'Activo',notas:r[7]||''
+      }));
+    }
+    if(data.movements?.length){
+      DB.movements=data.movements.map(r=>({
+        id:r[0],clientId:r[1],tipo:r[2],fecha:r[3],
+        monto:parseFloat(r[4])||0,desc:r[5]||'',notas:r[6]||''
+      }));
+    }
+    renderDashboard();
+    const txt=document.getElementById('connStatusText');
+    if(txt){txt.textContent='🟢 Conectado';}
+    toast('Sincronizado con Google Sheets ✅','success');
+  }catch(e){
+    toast('Error al sincronizar: '+e.message,'error');
+  }finally{
+    btn.style.animation='';
   }
-
-  doc.save(`CC_${client.nombre.replace(/\s+/g,'_')}_${new Date().toISOString().split('T')[0]}.pdf`);
-  toast('PDF exportado ✅', 'success');
 }
 
-function exportFilteredPDF() {
-  const clientId = document.getElementById('filterCliente').value;
-  const desde = document.getElementById('filterDesde').value;
-  const hasta = document.getElementById('filterHasta').value;
-  const tipo = document.getElementById('filterTipo').value;
+async function testConnection(){
+  const url=document.getElementById('gasUrl')?.value.trim();
+  if(!url){toast('Pegá la URL del Apps Script','warning');return;}
+  CONFIG.gasUrl=url; saveConfig();
+  toast('Probando...','info');
+  try{
+    const res=await fetch(url+'?action=ping');
+    const data=await res.json();
+    if(data.ok){
+      toast('✅ Conexión exitosa','success');
+      const box=document.getElementById('connStatusBox');
+      if(box) box.innerHTML='<div class="info-box" style="background:#EAFAF1;color:#1e6e3e;border:1px solid var(--success);"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span>🟢 Conectado correctamente. Ya podés sincronizar.</span></div>';
+      const txt=document.getElementById('connStatusText');
+      if(txt) txt.textContent='🟢 Conectado';
+    } else {
+      toast('El script respondió con error','warning');
+    }
+  }catch(e){
+    toast('❌ No se pudo conectar — verificá que el Apps Script esté publicado con acceso "Cualquier persona"','error');
+  }
+}
 
-  let filtered = DB.movements.filter(m => {
-    if(clientId && m.clientId !== clientId) return false;
-    if(desde && m.fecha < desde) return false;
-    if(hasta && m.fecha > hasta) return false;
-    if(tipo && m.tipo !== tipo) return false;
+// ═══════════════════════════════════════════════════
+//  PDF EXPORT
+// ═══════════════════════════════════════════════════
+function exportClientPDF(){
+  const c=DB.clients.find(x=>x.id===currentClientId);
+  if(!c)return;
+  const movs=[...DB.movements.filter(m=>m.clientId===currentClientId)].sort((a,b)=>a.fecha.localeCompare(b.fecha));
+  const{jsPDF}=window.jspdf;
+  const doc=new jsPDF();
+  doc.setFillColor(27,58,92); doc.rect(0,0,210,38,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(18);doc.setFont('helvetica','bold');doc.text('Cuenta Corriente',14,16);
+  doc.setFontSize(12);doc.setFont('helvetica','normal');doc.text(c.nombre,14,24);
+  doc.setFontSize(9);doc.text(`${c.direccion} · ${c.telefono||''}`,14,31);
+  doc.text(`Generado: ${new Date().toLocaleDateString('es-AR')}`,140,31);
+  const bal=getBalance(c.id);
+  doc.setTextColor(0,0,0);doc.setFontSize(10);doc.setFont('helvetica','normal');
+  doc.text(`Saldo: ${fmt(bal)}`,14,50);
+  doc.text(`Días deuda: ${getDebtAge(c.id)}`,80,50);
+  doc.text(`Crédito: ${c.diasCredito} días`,150,50);
+  let running=0;
+  const rows=movs.map(m=>{
+    if(m.tipo==='Venta')running+=parseFloat(m.monto||0);
+    else running-=parseFloat(m.monto||0);
+    return[fmtDate(m.fecha),m.tipo,m.desc||'-',(m.tipo==='Venta'?'+':'-')+fmt(m.monto),fmt(running)];
+  });
+  doc.autoTable({startY:58,head:[['Fecha','Tipo','Descripción','Monto','Saldo']],body:rows,
+    headStyles:{fillColor:[46,139,192],textColor:255,fontStyle:'bold'},
+    alternateRowStyles:{fillColor:[235,245,251]},styles:{fontSize:9}
+  });
+  const n=doc.internal.getNumberOfPages();
+  for(let i=1;i<=n;i++){doc.setPage(i);doc.setFontSize(8);doc.setTextColor(150);doc.text(`GestiónPro · Pág ${i}/${n}`,14,290);}
+  doc.save(`CC_${c.nombre.replace(/\s+/g,'_')}_${new Date().toISOString().split('T')[0]}.pdf`);
+  toast('PDF exportado ✅','success');
+}
+
+function exportFilteredPDF(){
+  const clientId=document.getElementById('filterCliente').value;
+  const desde=document.getElementById('filterDesde').value;
+  const hasta=document.getElementById('filterHasta').value;
+  const tipo=document.getElementById('filterTipo').value;
+  let f=DB.movements.filter(m=>{
+    if(clientId&&m.clientId!==clientId)return false;
+    if(desde&&m.fecha<desde)return false;
+    if(hasta&&m.fecha>hasta)return false;
+    if(tipo&&m.tipo!==tipo)return false;
     return true;
-  }).sort((a,b) => a.fecha.localeCompare(b.fecha));
-
-  if(!filtered.length) { toast('No hay movimientos para exportar', 'warning'); return; }
-
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-
-  doc.setFillColor(27,58,92);
-  doc.rect(0,0,210,38,'F');
+  }).sort((a,b)=>a.fecha.localeCompare(b.fecha));
+  if(!f.length){toast('No hay movimientos para exportar','warning');return;}
+  const{jsPDF}=window.jspdf;
+  const doc=new jsPDF();
+  doc.setFillColor(27,58,92);doc.rect(0,0,210,38,'F');
   doc.setTextColor(255,255,255);
-  doc.setFontSize(18); doc.setFont('helvetica','bold');
-  doc.text('Reporte de Movimientos', 14, 16);
-  doc.setFontSize(10); doc.setFont('helvetica','normal');
-  const clientName = clientId ? DB.clients.find(c=>c.id===clientId)?.nombre||'' : 'Todos los clientes';
-  doc.text(clientName, 14, 24);
-  doc.text(`Período: ${desde?fmtDate(desde):'--'} al ${hasta?fmtDate(hasta):'--'}`, 14, 31);
-  doc.text(`Generado: ${new Date().toLocaleDateString('es-AR')}`, 160, 31);
-
-  const totalVentas = filtered.filter(m=>m.tipo==='Venta').reduce((s,m)=>s+parseFloat(m.monto||0),0);
-  const totalPagos = filtered.filter(m=>m.tipo==='Pago').reduce((s,m)=>s+parseFloat(m.monto||0),0);
-
-  doc.setTextColor(0,0,0);
-  doc.setFontSize(10); doc.setFont('helvetica','normal');
-  doc.text(`Total Ventas: ${fmt(totalVentas)}`, 14, 50);
-  doc.text(`Total Pagos: ${fmt(totalPagos)}`, 80, 50);
-  doc.text(`Diferencia: ${fmt(totalVentas-totalPagos)}`, 150, 50);
-  doc.text(`Movimientos: ${filtered.length}`, 14, 57);
-
-  const rows = filtered.map(m => {
-    const client = DB.clients.find(c=>c.id===m.clientId);
-    return [fmtDate(m.fecha), client?.nombre||m.clientId, m.tipo, m.desc||'-', (m.tipo==='Venta'?'+':'-')+fmt(m.monto)];
+  doc.setFontSize(17);doc.setFont('helvetica','bold');doc.text('Reporte de Movimientos',14,16);
+  doc.setFontSize(10);doc.setFont('helvetica','normal');
+  doc.text(clientId?getClientName(clientId):'Todos los clientes',14,24);
+  doc.text(`${desde?fmtDate(desde):'--'} al ${hasta?fmtDate(hasta):'--'}`,14,31);
+  doc.text(`Generado: ${new Date().toLocaleDateString('es-AR')}`,140,31);
+  const tv=f.filter(m=>m.tipo==='Venta').reduce((s,m)=>s+parseFloat(m.monto||0),0);
+  const tp=f.filter(m=>m.tipo==='Pago').reduce((s,m)=>s+parseFloat(m.monto||0),0);
+  doc.setTextColor(0,0,0);doc.setFontSize(10);
+  doc.text(`Ventas: ${fmt(tv)}`,14,50);doc.text(`Pagos: ${fmt(tp)}`,80,50);doc.text(`Saldo: ${fmt(tv-tp)}`,150,50);
+  const rows=f.map(m=>[fmtDate(m.fecha),getClientName(m.clientId),m.tipo,m.desc||'-',(m.tipo==='Venta'?'+':'-')+fmt(m.monto)]);
+  doc.autoTable({startY:58,head:[['Fecha','Cliente','Tipo','Descripción','Monto']],body:rows,
+    headStyles:{fillColor:[46,139,192],textColor:255,fontStyle:'bold'},
+    alternateRowStyles:{fillColor:[235,245,251]},styles:{fontSize:9},
+    didParseCell:(d)=>{if(d.section==='body'&&d.column.index===4){d.cell.styles.textColor=d.cell.raw.startsWith('+')?[39,174,96]:[231,76,60];d.cell.styles.fontStyle='bold';}}
   });
-
-  doc.autoTable({
-    startY: 63,
-    head: [['Fecha','Cliente','Tipo','Descripción','Monto']],
-    body: rows,
-    headStyles: { fillColor: [46,139,192], textColor:255, fontStyle:'bold' },
-    alternateRowStyles: { fillColor: [235,245,251] },
-    styles: { fontSize: 9 },
-    didParseCell: (data) => {
-      if(data.section==='body' && data.column.index===4) {
-        data.cell.styles.textColor = data.cell.raw.startsWith('+')?[39,174,96]:[231,76,60];
-        data.cell.styles.fontStyle = 'bold';
-      }
-    }
-  });
-
-  const pCount = doc.internal.getNumberOfPages();
-  for(let i=1;i<=pCount;i++) {
-    doc.setPage(i);
-    doc.setFontSize(8); doc.setTextColor(150);
-    doc.text(`GestiónPro · Pág ${i}/${pCount}`, 14, 290);
-  }
-
+  const n=doc.internal.getNumberOfPages();
+  for(let i=1;i<=n;i++){doc.setPage(i);doc.setFontSize(8);doc.setTextColor(150);doc.text(`GestiónPro · Pág ${i}/${n}`,14,290);}
   doc.save(`Movimientos_${desde||'inicio'}_${hasta||'fin'}.pdf`);
-  toast('PDF de movimientos exportado ✅', 'success');
+  toast('PDF exportado ✅','success');
 }
 
-// ═══════════════════════════════════════════════════
-//   GOOGLE SHEETS SYNC
-// ═══════════════════════════════════════════════════
-function clientToRow(c) {
-  return [c.id, c.nombre, c.telefono||'', c.direccion, c.email||'', c.diasCredito, c.estado, c.notas||''];
+// ── Misc
+function clearAll(){
+  if(!confirm('¿Borrar todos los datos locales? (Sheets no se modifica)'))return;
+  localStorage.clear();
+  DB={clients:[],movements:[]};
+  loadDemoData();
+  renderDashboard();
+  toast('Datos locales borrados','warning');
 }
 
-function movToRow(m) {
-  return [m.id, m.clientId, m.tipo, m.fecha, m.monto, m.desc||'', m.notas||''];
+function copyGasCode(){
+  const code=document.getElementById('gasCodeBlock').innerText.replace(/&lt;/g,'<').replace(/&gt;/g,'>');
+  navigator.clipboard.writeText(code).then(()=>toast('Código copiado al portapapeles ✅','success')).catch(()=>toast('Seleccioná el código manualmente','warning'));
 }
 
-async function syncToSheet(sheetName, rowData) {
-  if(!CONFIG.sheetId || !CONFIG.apiKey) return;
-  // Using Google Apps Script Web App for write operations
-  if(CONFIG.gasUrl) {
-    try {
-      await fetch(CONFIG.gasUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sheet: sheetName, row: rowData })
-      });
-    } catch(e) { console.warn('GAS sync failed:', e); }
-  }
-}
-
-async function syncData() {
-  toast('Sincronizando...', 'info');
-  try {
-    // Ejemplo de cómo traer la hoja 'Clientes'
-    const res = await fetch(CONFIG.gasUrl + '?sheet=Clientes');
-    const data = await res.json();
-    
-    if(data.values) {
-      console.log("Datos recibidos:", data.values);
-      // Aquí iría tu lógica para procesar los datos
-      toast('Conexión exitosa ✅', 'success');
-    }
-  } catch(e) {
-    console.error(e);
-    toast('Error: ' + e.message, 'error');
-  }
-}
-
-async function testConnection() {
-  if(!CONFIG.sheetId || !CONFIG.apiKey) {
-    toast('Ingresá el Sheet ID y API Key', 'warning'); return;
-  }
-  try {
-    const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.sheetId}?key=${CONFIG.apiKey}`);
-    if(res.ok) toast('✅ Conexión exitosa a Google Sheets', 'success');
-    else toast('❌ Error: verificá el ID y la API Key', 'error');
-  } catch(e) {
-    toast('❌ Error de conexión', 'error');
-  }
-}
-
-// ── Open movimiento modal & populate
-document.querySelectorAll('.nav-item').forEach(() => {});
-window.addEventListener('click', e => {
-  if(e.target.classList.contains('overlay')) {
-    document.querySelectorAll('.overlay.show').forEach(o => o.classList.remove('show'));
-  }
+// Close drawers on back gesture (popstate)
+window.addEventListener('popstate',()=>{
+  document.querySelectorAll('.drawer-overlay.show').forEach(d=>d.classList.remove('show'));
+  document.querySelectorAll('.fullscreen.show').forEach(f=>f.classList.remove('show'));
+  document.body.style.overflow='';
 });
 
-// Pre-populate client select when opening movimiento modal
-document.getElementById('modalMovimiento').addEventListener('transitionend', () => {});
-const origOpenModal = openModal;
-window.openModal = function(id) {
-  if(id === 'modalMovimiento') populateClientSelect(currentClientId||'');
-  document.getElementById(id).classList.add('show');
-};
-</script>
+// Add spin keyframe dynamically
+const style=document.createElement('style');
+style.textContent='@keyframes spin{to{transform:rotate(360deg)}}';
+document.head.appendChild(style);
 
-<!-- ═══ APPS SCRIPT GUIDE ═══ -->
-<script>
-// ══════════════════════════════════════════════════════════
-// INSTRUCCIONES GOOGLE SHEETS / APPS SCRIPT
-// ══════════════════════════════════════════════════════════
-/*
-PASO 1: Crear Google Spreadsheet con 2 hojas:
-  - Hoja "Clientes" con headers: id | nombre | telefono | direccion | email | diasCredito | estado | notas
-  - Hoja "Movimientos" con headers: id | clientId | tipo | fecha | monto | desc | notas
-
-PASO 2: Pegar este código en Google Apps Script (Extensions > Apps Script):
-
-function doPost(e) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const data = JSON.parse(e.postData.contents);
-  const sheet = ss.getSheetByName(data.sheet);
-  const existing = sheet.getDataRange().getValues();
-  const rowId = data.row[0];
-  for(let i=1;i<existing.length;i++){
-    if(existing[i][0]===rowId){ sheet.getRange(i+1,1,1,data.row.length).setValues([data.row]); return ContentService.createTextOutput(JSON.stringify({ok:true})).setMimeType(ContentService.MimeType.JSON); }
-  }
-  sheet.appendRow(data.row);
-  return ContentService.createTextOutput(JSON.stringify({ok:true})).setMimeType(ContentService.MimeType.JSON);
-}
-
-function doGet(e) {
-  return ContentService.createTextOutput(JSON.stringify({ok:true})).setMimeType(ContentService.MimeType.JSON);
-}
-
-PASO 3: Deploy > New Deployment > Web App > Execute as Me > Anyone
-PASO 4: Copiar la URL del Web App y pegarla como "gasUrl" en el código (CONFIG.gasUrl)
-
-PASO 5: Google Sheets API Key:
-  - console.cloud.google.com > APIs > Enable "Google Sheets API"
-  - Credentials > Create API Key > restringir a tu dominio
-
-*/
-console.log('%c GestiónPro v1.0 — Listo para usar 🚀', 'color:#2E8BC0;font-size:14px;font-weight:bold;');
-console.log('%c Datos demo cargados. Configurá tu Google Sheets para persistencia en la nube.', 'color:#6B7A90;');
+console.log('%c GestiónPro v2.0 Mobile 🚀','color:#2E8BC0;font-weight:bold;font-size:14px;');
 </script>
 </body>
 </html>
